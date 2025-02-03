@@ -1,0 +1,20 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.rt-Card.selected {
+  background-color: var(--accent-7);
+  .rt-Text {
+    color: var(--accent-9);
+  }
+}
+
+p {
+  margin-block-start: 2px;
+  margin-block-end: 2px;
+}
+
+code {
+  font-family: Consolas, 'Courier New', Courier, monospace
+}
