@@ -47,6 +47,34 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
       rehypePlugins={[rehypeKatex, rehypeHighlight]}
+      components={{
+        code(props) {
+          const { children, className, node, ...rest } = props;
+          const match = /language-(\w+)/.exec(className || "");
+          return match ? (
+            <Card variant="surface" style={{ overflow: "auto", padding: 0 }}>
+              <Flex gap="1" direction="column" overflow="auto">
+                <Text
+                  size="1"
+                  color="gray"
+                  align="right"
+                  weight="bold"
+                  style={{ borderBottom: "1px solid var(--gray-6)", padding: "var(--space-2)" }}
+                >
+                  {match[1].toUpperCase()}
+                </Text>
+                <code {...rest} className={className}>
+                  {children}
+                </code>
+              </Flex>
+            </Card>
+          ) : (
+            <code {...rest} className={className}>
+              {children}
+            </code>
+          );
+        },
+      }}
     >
       {content
         .replaceAll("\\[", "$$")
@@ -70,7 +98,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     <Flex
       direction="column"
       minHeight="max-content"
-      maxWidth="min(max-content, 100%)"
+      maxWidth="100%"
       align={message.role === "user" ? "end" : "start"}
       p="3"
     >
@@ -86,10 +114,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           ? message.llmModelName
           : message.role}
       </Text>
-      <Card style={{ display: "flex", flexDirection: "column" }}>
+      <Card
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-1)",
+          maxWidth: "100%",
+        }}
+      >
         {message.content.startsWith("<think>") ? (
           <>
-            <Card style={{ backgroundColor: "var(--accent-a5)" }}>
+            <Card
+              style={{
+                backgroundColor: "var(--accent-a5)",
+                width: "min(max-content, 100%)",
+              }}
+            >
               <Code>{"Reasoning Content"}</Code>
               <MarkdownRenderer
                 content={

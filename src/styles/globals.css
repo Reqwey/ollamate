@@ -18,3 +18,7 @@ p {
 code {
   font-family: Consolas, 'Courier New', Courier, monospace
 }
+
+pre {
+  max-width: 100%;
+}
