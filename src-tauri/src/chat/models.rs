@@ -14,3 +14,8 @@ pub struct ChatMessage {
     pub content: String,
     pub images: Vec<String>,
 }
+
+#[derive(Default)]
+pub struct AppState {
+    pub stop_flag: bool
+}

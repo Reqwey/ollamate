@@ -7,6 +7,7 @@ import {
   Card,
   DropdownMenu,
   Code,
+  IconButton,
 } from "@radix-ui/themes";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -18,7 +19,13 @@ import { useChatContext } from "@/contexts/chat";
 import { ChatMessage, LLMModel } from "@/models/chat";
 import { UUID } from "crypto";
 import { fetch } from "@tauri-apps/plugin-http";
-import { fetchChatData, onChatResponse, fetchModelList } from "@/services/chat";
+import {
+  fetchChatData,
+  onChatResponse,
+  fetchModelList,
+  pauseChat,
+} from "@/services/chat";
+import { PauseIcon } from "@radix-ui/react-icons";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -61,6 +68,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const [modelList, setModelList] = useState<LLMModel[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (chatId) setIsLoading(false);
+  }, [chatId]);
 
   useEffect(() => {
     const loadModelList = async () => {
@@ -112,12 +123,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       );
       await syncSetMessages(true);
       setInput("");
+      setIsLoading(true);
     }
   }, [chatId, createChatMessage, input, messages, syncSetMessages]);
 
   const handleRespond = useCallback(async () => {
     if (modelName) {
-      setIsLoading(true);
       setRespondingMessage({ ...emptyMessage, llmModelName: modelName });
 
       await fetchChatData(modelName, messages);
@@ -127,10 +138,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   }, [messages, modelName]);
 
   useEffect(() => {
-    if (messages.length && messages[messages.length - 1].role === "user") {
+    if (
+      messages.length &&
+      messages[messages.length - 1].role === "user" &&
+      isLoading
+    ) {
       handleRespond();
     }
-  }, [messages, handleRespond]);
+  }, [messages, handleRespond, isLoading]);
 
   useEffect(() => {
     if (chatId && !isLoading && respondingMessage.content) {
@@ -269,9 +284,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           placeholder="Type your message..."
           style={{ flex: 1 }}
         />
-        <Button loading={isLoading} onClick={handleSend}>
-          Send
-        </Button>
+        <Flex direction="row" gap="3" justify="between">
+          {isLoading && modelName && (
+            <IconButton onClick={pauseChat}>
+              <PauseIcon />
+            </IconButton>
+          )}
+          <Button loading={isLoading} onClick={handleSend} style={{ flex: 1 }}>
+            Send
+          </Button>
+        </Flex>
       </Flex>
     </Flex>
   );
