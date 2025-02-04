@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
   TextArea,
@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   Code,
   IconButton,
+  Spinner,
+  Box,
 } from "@radix-ui/themes";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -18,7 +20,6 @@ import "highlight.js/styles/github.css";
 import { useChatContext } from "@/contexts/chat";
 import { ChatMessage, LLMModel } from "@/models/chat";
 import { UUID } from "crypto";
-import { fetch } from "@tauri-apps/plugin-http";
 import {
   fetchChatData,
   onChatResponse,
@@ -56,6 +57,61 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   );
 };
 
+interface ChatMessageBubbleProps {
+  message: ChatMessage;
+  respondingMode: boolean;
+}
+
+const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
+  message,
+  respondingMode,
+}) => {
+  return (
+    <Flex
+      direction="column"
+      minHeight="max-content"
+      maxWidth="min(max-content, 100%)"
+      align={message.role === "user" ? "end" : "start"}
+      p="3"
+    >
+      <Text
+        as="div"
+        weight="bold"
+        style={{
+          width: "100%",
+          textAlign: message.role === "user" ? "end" : "start",
+        }}
+      >
+        {message.role === "assistant" && message.llmModelName
+          ? message.llmModelName
+          : message.role}
+      </Text>
+      <Card style={{ display: "flex", flexDirection: "column" }}>
+        {message.content.startsWith("<think>") ? (
+          <>
+            <Card style={{ backgroundColor: "var(--accent-a5)" }}>
+              <Code>{"Reasoning Content"}</Code>
+              <MarkdownRenderer
+                content={
+                  message.content.split("<think>")[1].split("</think>")[0]
+                }
+              />
+            </Card>
+            {message.content.includes("</think>") && (
+              <MarkdownRenderer
+                content={message.content.split("</think>")[1]}
+              />
+            )}
+          </>
+        ) : (
+          <MarkdownRenderer content={message.content} />
+        )}
+        {respondingMode && <Spinner />}
+      </Card>
+    </Flex>
+  );
+};
+
 interface ChatInterfaceProps {
   chatId: UUID;
 }
@@ -68,6 +124,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const [modelList, setModelList] = useState<LLMModel[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (chatId) setIsLoading(false);
@@ -172,6 +229,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     syncSetMessages,
   ]);
 
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({
+      block: "end",
+      inline: "end",
+      behavior: "smooth",
+    });
+  }, [isLoading, respondingMessage.content, messages]);
+
   return (
     <Flex
       direction="column"
@@ -216,55 +281,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
         overflowY="auto"
         width="100%"
       >
-        {[...messages, respondingMessage].map(
-          (message, index) =>
-            !!message.content && (
-              <Flex
-                key={index}
-                direction="column"
-                minHeight="max-content"
-                maxWidth="min(max-content, 100%)"
-                align={message.role === "user" ? "end" : "start"}
-                p="3"
-              >
-                <Text
-                  as="div"
-                  weight="bold"
-                  style={{
-                    width: "100%",
-                    textAlign: message.role === "user" ? "end" : "start",
-                  }}
-                >
-                  {message.role === "assistant" && message.llmModelName
-                    ? message.llmModelName
-                    : message.role}
-                </Text>
-                <Card style={{ display: "flex", flexDirection: "column" }}>
-                  {message.content.startsWith("<think>") ? (
-                    <>
-                      <Card style={{ backgroundColor: "var(--accent-a5)" }}>
-                        <Code>{"Reasoning Content"}</Code>
-                        <MarkdownRenderer
-                          content={
-                            message.content
-                              .split("<think>")[1]
-                              .split("</think>")[0]
-                          }
-                        />
-                      </Card>
-                      {message.content.includes("</think>") && (
-                        <MarkdownRenderer
-                          content={message.content.split("</think>")[1]}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <MarkdownRenderer content={message.content} />
-                  )}
-                </Card>
-              </Flex>
-            )
+        {messages.map((message, index) => (
+          <ChatMessageBubble
+            key={index}
+            message={message}
+            respondingMode={false}
+          />
+        ))}
+        {isLoading && (
+          <ChatMessageBubble
+            message={respondingMessage}
+            respondingMode={true}
+          />
         )}
+        <Box ref={messageEndRef} />
       </Flex>
       <Flex
         gap="3"
