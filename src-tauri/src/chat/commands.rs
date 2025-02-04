@@ -1,7 +1,9 @@
 use super::models::{AppState, ChatMessage, Model};
+use base64::{self, Engine};
 use futures_util::StreamExt;
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, State};
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_http::reqwest::Client;
 use tokio::sync::Mutex;
 
@@ -112,4 +114,24 @@ pub async fn fetch_model_list() -> Result<Vec<Model>, String> {
         .collect();
 
     Ok(models)
+}
+
+#[tauri::command]
+pub async fn open_images(app: AppHandle) -> Result<Vec<String>, String> {
+    let image_paths = app
+        .dialog()
+        .file()
+        .add_filter("Images", &["png", "jpeg", "jpg", "gif", "bmp", "webp"])
+        .blocking_pick_files();
+    let mut base64_images = Vec::new();
+
+    if let Some(paths) = image_paths {
+        for path in paths {
+            let image_data = std::fs::read(path.to_string()).map_err(|e| e.to_string())?;
+            let base64_image = base64::engine::general_purpose::STANDARD.encode(&image_data);
+            base64_images.push(base64_image);
+        }
+    }
+
+    Ok(base64_images)
 }

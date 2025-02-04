@@ -40,3 +40,12 @@ export const fetchModelList = async () => {
     return [];
   }
 };
+
+export const openImages = async () => {
+  try {
+    const images = await invoke<string[]>("open_images");
+    return images;
+  } catch (error) {
+    console.error(error);
+  }
+};

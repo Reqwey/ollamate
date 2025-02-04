@@ -8,6 +8,7 @@ pub fn run() {
     Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.manage(Mutex::new(AppState::default()));
             if cfg!(debug_assertions) {
@@ -22,7 +23,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             chat::commands::fetch_chat_data,
             chat::commands::pause_chat,
-            chat::commands::fetch_model_list
+            chat::commands::fetch_model_list,
+            chat::commands::open_images,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
@@ -10,6 +11,8 @@ import {
   IconButton,
   Spinner,
   Box,
+  Grid,
+  AspectRatio,
 } from "@radix-ui/themes";
 import ReactMarkdown from "react-markdown";
 import rehypeKatex from "rehype-katex";
@@ -25,8 +28,9 @@ import {
   onChatResponse,
   fetchModelList,
   pauseChat,
+  openImages,
 } from "@/services/chat";
-import { PauseIcon } from "@radix-ui/react-icons";
+import { PauseIcon, UploadIcon } from "@radix-ui/react-icons";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -59,7 +63,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
                   color="gray"
                   align="right"
                   weight="bold"
-                  style={{ borderBottom: "1px solid var(--gray-6)", padding: "var(--space-2)" }}
+                  style={{
+                    borderBottom: "1px solid var(--gray-6)",
+                    padding: "var(--space-2)",
+                  }}
                 >
                   {match[1].toUpperCase()}
                 </Text>
@@ -97,10 +104,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   return (
     <Flex
       direction="column"
-      minHeight="max-content"
       maxWidth="100%"
       align={message.role === "user" ? "end" : "start"}
       p="3"
+      gap="2"
     >
       <Text
         as="div"
@@ -147,6 +154,27 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           <MarkdownRenderer content={message.content} />
         )}
         {respondingMode && <Spinner />}
+        {!!message.images.length && (
+          <Flex gap="2" direction="row" wrap="wrap" width="fit-content">
+            {message.images.map((image, index) => (
+              <Card
+                key={index}
+                style={{ width: "100px", height: "100px", padding: "0" }}
+              >
+                <img
+                  src={`data:image/png;base64,${image}`}
+                  alt=""
+                  style={{
+                    objectFit: "cover",
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "var(--radius-2)",
+                  }}
+                />
+              </Card>
+            ))}
+          </Flex>
+        )}
       </Card>
     </Flex>
   );
@@ -163,11 +191,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const [modelName, setModelName] = useState<string>();
   const [modelList, setModelList] = useState<LLMModel[]>([]);
   const [input, setInput] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (chatId) setIsLoading(false);
+    if (chatId) {
+      setIsLoading(false);
+      setImages([]);
+    }
   }, [chatId]);
 
   useEffect(() => {
@@ -216,13 +248,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
         messages.length ? messages[messages.length - 1].id : null,
         "user",
         input,
-        []
+        images
       );
       await syncSetMessages(true);
       setInput("");
+      setImages([]);
       setIsLoading(true);
     }
-  }, [chatId, createChatMessage, input, messages, syncSetMessages]);
+  }, [chatId, createChatMessage, images, input, messages, syncSetMessages]);
 
   const handleRespond = useCallback(async () => {
     if (modelName) {
@@ -354,13 +387,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           placeholder="Type your message..."
           style={{ flex: 1 }}
         />
+        {!!images.length && (
+          <Grid columns={{ xs: "5", md: "8", lg: "9" }} gap="3" width="auto">
+            {images.map((image, index) => (
+              <AspectRatio key={index} ratio={1}>
+                <img
+                  src={`data:image/png;base64,${image}`}
+                  alt=""
+                  style={{
+                    objectFit: "cover",
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "var(--radius-2)",
+                  }}
+                />
+              </AspectRatio>
+            ))}
+          </Grid>
+        )}
         <Flex direction="row" gap="3" justify="between">
           {isLoading && modelName && (
             <IconButton onClick={pauseChat}>
               <PauseIcon />
             </IconButton>
           )}
-          <Button loading={isLoading} onClick={handleSend} style={{ flex: 1 }}>
+          <Button
+            variant="soft"
+            onClick={() => openImages().then((list) => list && setImages(list))}
+          >
+            <UploadIcon />
+            Upload Images
+          </Button>
+          <Button disabled={!modelName || !input.trim()} loading={isLoading} onClick={handleSend} style={{ flex: 1 }}>
             Send
           </Button>
         </Flex>

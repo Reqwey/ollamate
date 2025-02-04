@@ -8,9 +8,7 @@
   "permissions": [
     "core:default",
     "store:default",
-    {
-      "identifier": "http:default",
-      "allow": ["http://localhost:11434"]
-    }
+    "http:default",
+    "dialog:default"
   ]
 }
