@@ -25,6 +25,7 @@ pub fn run() {
             chat::commands::pause_chat,
             chat::commands::fetch_model_list,
             chat::commands::open_images,
+            chat::commands::generate_title,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

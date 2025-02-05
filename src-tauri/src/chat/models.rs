@@ -7,7 +7,7 @@ pub struct Model {
     pub parameter_size: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatMessage {
     pub role: String,
@@ -17,5 +17,5 @@ pub struct ChatMessage {
 
 #[derive(Default)]
 pub struct AppState {
-    pub stop_flag: bool
+    pub stop_flag: bool,
 }

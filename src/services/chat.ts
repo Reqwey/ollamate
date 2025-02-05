@@ -49,3 +49,15 @@ export const openImages = async () => {
     console.error(error);
   }
 };
+
+export const generateTitle = async (
+  modelName: string,
+  messages: ChatMessage[]
+) => {
+  try {
+    const title = await invoke<string>("generate_title", { modelName, messages });
+    return title;
+  } catch (error) {
+    console.error(error);
+  }
+};

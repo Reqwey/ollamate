@@ -135,3 +135,71 @@ pub async fn open_images(app: AppHandle) -> Result<Vec<String>, String> {
 
     Ok(base64_images)
 }
+
+#[tauri::command]
+pub async fn generate_title(
+    model_name: String,
+    messages: Vec<ChatMessage>,
+) -> Result<String, String> {
+    let prompt = ChatMessage {
+        role: "system".to_string(),
+        content:
+            "You are a helpful assistant that generates a short title for the above conversation, \\
+         and then concludes the conversation with a single emoji."
+                .to_string(),
+        images: vec![],
+    };
+    let mut msgs = messages.clone();
+    msgs.push(prompt);
+    let client = Client::new();
+    let response = client
+        .post("http://localhost:11434/api/chat")
+        .body(
+            serde_json::json!({
+                "model": model_name,
+                "messages": msgs,
+                "stream": false,
+                "format": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "emoji": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "title",
+                        "emoji"
+                    ]
+                },
+                "options": {
+                    "temperature": 0
+                }
+            })
+            .to_string(),
+        )
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let json_response: Value = response.json().await.map_err(|e| e.to_string())?;
+	let content = json_response["message"]["content"]
+        .as_str()
+        .unwrap_or_default();
+    let structured_content: Value = serde_json::from_str(&content).unwrap_or_default();
+	let title = structured_content["title"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    let emoji = structured_content["emoji"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+
+    if title.is_empty() || emoji.is_empty() {
+        return Err("Failed to generate title".to_string());
+    }
+
+    Ok(emoji + " " + &title)
+}

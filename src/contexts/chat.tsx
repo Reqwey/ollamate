@@ -12,7 +12,7 @@ import { Store } from "@tauri-apps/plugin-store";
 
 interface ChatContextProps {
 	getChatInfoList: (sync?: boolean) => Promise<ChatInfo[]>;
-	getShownChatMessageList: (id: UUID, sync?: boolean) => Promise<ChatMessage[]>;
+	getShownChat: (id: UUID, sync?: boolean) => Promise<Chat | null>;
 	createChat: () => Promise<Chat | void>;
 	deleteChat: (id: UUID) => Promise<void>;
 	updateChat: (id: UUID, value: Partial<Chat>) => Promise<void>;
@@ -68,14 +68,14 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 		[chatInfoList, fetchStore]
 	);
 
-	const getShownChatMessageList = useCallback(
-		async (id: UUID, sync = false) => {
+	const getShownChat = useCallback(
+		async (id: UUID, sync = false): Promise<Chat | null> => {
 			const store = await fetchStore();
 
 			const storedChat = await store.get<StoredChat>(id);
 
 			if (!storedChat) {
-				return [];
+				return null;
 			}
 
 			const chat: Chat = {
@@ -106,7 +106,7 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				}
 			}
 
-			return newMessages;
+			return {...chat, messages: newMessages};
 		},
 		[fetchStore]
 	);
@@ -286,7 +286,7 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 		<ChatContext.Provider
 			value={{
 				getChatInfoList,
-				getShownChatMessageList,
+				getShownChat,
 				createChat,
 				deleteChat,
 				updateChat,

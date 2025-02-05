@@ -29,8 +29,10 @@ import {
   fetchModelList,
   pauseChat,
   openImages,
+  generateTitle,
 } from "@/services/chat";
 import { PauseIcon, UploadIcon } from "@radix-ui/react-icons";
+import { useRouter } from "next/router";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -184,7 +186,9 @@ interface ChatInterfaceProps {
   chatId: UUID;
 }
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
-  const { getShownChatMessageList, createChatMessage } = useChatContext();
+  const router = useRouter();
+  const { getShownChat, createChatMessage, updateChat } = useChatContext();
+  const [title, setTitle] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [respondingMessage, setRespondingMessage] =
     useState<ChatMessage>(emptyMessage);
@@ -217,10 +221,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const syncSetMessages = useCallback(
     async (sync = false) => {
       if (chatId) {
-        setMessages(await getShownChatMessageList(chatId, sync));
+        const chat = await getShownChat(chatId, sync);
+        if (chat) {
+          setMessages(chat.messages);
+          setTitle(chat.title);
+        } else {
+          router.push("/");
+        }
       }
     },
-    [chatId, getShownChatMessageList]
+    [chatId, getShownChat, router]
   );
 
   useEffect(() => {
@@ -303,6 +313,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   ]);
 
   useEffect(() => {
+    if (
+      chatId &&
+      modelName &&
+      messages.length &&
+      messages[messages.length - 1].role === "assistant" &&
+      !isLoading &&
+      title === "Untitled chat"
+    ) {
+      generateTitle(modelName, messages).then((title) => {
+        if (title) {
+          updateChat(chatId, { title }).then(() => {
+            setTitle(title);
+          });
+        }
+      });
+    }
+  }, [chatId, isLoading, messages, modelName, title, updateChat]);
+
+  useEffect(() => {
     messageEndRef.current?.scrollIntoView({
       block: "end",
       inline: "end",
@@ -320,10 +349,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       <Flex
         mt="0"
         direction="row"
+        align="center"
+        gap="3"
         width="100%"
         p="3"
         style={{ borderBottom: "1px solid var(--gray-6)" }}
       >
+        <Text size="3" weight="bold">
+          {title}
+        </Text>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
             <Button variant="soft">
@@ -418,7 +452,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             <UploadIcon />
             Upload Images
           </Button>
-          <Button disabled={!modelName || !input.trim()} loading={isLoading} onClick={handleSend} style={{ flex: 1 }}>
+          <Button
+            disabled={!modelName || !input.trim()}
+            loading={isLoading}
+            onClick={handleSend}
+            style={{ flex: 1 }}
+          >
             Send
           </Button>
         </Flex>
