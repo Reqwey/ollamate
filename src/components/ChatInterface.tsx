@@ -21,7 +21,7 @@ import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github.css";
 import { useChatContext } from "@/contexts/chat";
-import { ChatMessage, LLMModel } from "@/models/chat";
+import { ChatMessage, ModelInfo } from "@/models/chat";
 import { UUID } from "crypto";
 import {
   fetchChatData,
@@ -31,8 +31,9 @@ import {
   openImages,
   generateTitle,
 } from "@/services/chat";
-import { PauseIcon, UploadIcon } from "@radix-ui/react-icons";
+import { GearIcon, PauseIcon, UploadIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
+import { useSettingsContext } from "@/contexts/settings";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -188,12 +189,18 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const router = useRouter();
   const { getShownChat, createChatMessage, updateChat } = useChatContext();
+  const {
+    getAppSettings,
+    getModelSettings,
+    saveAppSettings,
+    setSettingsDialogOpen,
+  } = useSettingsContext();
   const [title, setTitle] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [respondingMessage, setRespondingMessage] =
     useState<ChatMessage>(emptyMessage);
   const [modelName, setModelName] = useState<string>();
-  const [modelList, setModelList] = useState<LLMModel[]>([]);
+  const [modelList, setModelList] = useState<ModelInfo[]>([]);
   const [input, setInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -207,16 +214,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   }, [chatId]);
 
   useEffect(() => {
+    getAppSettings().then((appSettings) =>
+      setModelName(appSettings.selectedModel)
+    );
+  }, [getAppSettings]);
+
+  useEffect(() => {
     const loadModelList = async () => {
-      const models = await fetchModelList();
+      const apiUrl = (await getAppSettings()).ollamaApiUrl;
+      const models = await fetchModelList(apiUrl);
       setModelList(models);
-      if (models.length > 0) {
-        setModelName(models[0].name);
-      }
     };
 
     loadModelList();
-  }, []);
+  }, [getAppSettings]);
 
   const syncSetMessages = useCallback(
     async (sync = false) => {
@@ -271,11 +282,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     if (modelName) {
       setRespondingMessage({ ...emptyMessage, llmModelName: modelName });
 
-      await fetchChatData(modelName, messages);
+      const modelSettings = await getModelSettings();
+      const apiUrl = (await getAppSettings()).ollamaApiUrl;
+      await fetchChatData(
+        apiUrl,
+        modelName,
+        messages,
+        modelSettings[modelName]
+      );
 
       setIsLoading(false);
     }
-  }, [messages, modelName]);
+  }, [getAppSettings, getModelSettings, messages, modelName]);
 
   useEffect(() => {
     if (
@@ -321,15 +339,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       !isLoading &&
       title === "Untitled chat"
     ) {
-      generateTitle(modelName, messages).then((title) => {
-        if (title) {
-          updateChat(chatId, { title }).then(() => {
-            setTitle(title);
-          });
+      getAppSettings().then((settings) => {
+        if (settings.autoGenerateTitle) {
+          generateTitle(settings.ollamaApiUrl, modelName, messages).then(
+            (title) => {
+              if (title) {
+                updateChat(chatId, { title });
+              }
+            }
+          );
         }
       });
     }
-  }, [chatId, isLoading, messages, modelName, title, updateChat]);
+  }, [
+    chatId,
+    getAppSettings,
+    isLoading,
+    messages,
+    modelName,
+    title,
+    updateChat,
+  ]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({
@@ -350,14 +380,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
         mt="0"
         direction="row"
         align="center"
+        justify="between"
         gap="3"
         width="100%"
         p="3"
         style={{ borderBottom: "1px solid var(--gray-6)" }}
       >
-        <Text size="3" weight="bold">
-          {title}
-        </Text>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
             <Button variant="soft">
@@ -371,7 +399,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
                 <DropdownMenu.RadioItem
                   key={model.name}
                   value={model.name}
-                  onSelect={() => setModelName(model.name)}
+                  onSelect={() => {
+                    setModelName(model.name);
+                    saveAppSettings({ selectedModel: model.name });
+                  }}
                 >
                   <Text>{model.name}</Text>
                   <Code>{model.parameterSize}</Code>
@@ -380,6 +411,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             </DropdownMenu.RadioGroup>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
+        <IconButton
+          size="3"
+          variant="ghost"
+          onClick={() => setSettingsDialogOpen(true)}
+        >
+          <GearIcon />
+        </IconButton>
       </Flex>
       <Flex
         gap="3"

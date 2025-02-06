@@ -33,7 +33,7 @@ export interface StoredChat {
 	messages: ChatMessage[];
 }
 
-export interface LLMModel {
+export interface ModelInfo {
 	name: string;
 	parameterSize: string;
 }

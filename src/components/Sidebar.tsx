@@ -24,6 +24,7 @@ import { useChatContext } from "@/contexts/chat";
 import { ChatInfo } from "@/models/chat";
 import { UUID } from "crypto";
 import { useRouter } from "next/router";
+import { useSettingsContext } from "@/contexts/settings";
 
 interface NavMenuProps {
   id: UUID;
@@ -109,6 +110,7 @@ const Sidebar: React.FC = () => {
   const [chatInfoList, setChatInfoList] = useState<ChatInfo[]>([]);
   const [navMenuList, setNavMenuList] = useState<NavMenuProps[]>([]);
   const router = useRouter();
+  const { setSettingsDialogOpen } = useSettingsContext();
 
   const handleCreateMenu = useCallback(async () => {
     const newChat = await createChat();
@@ -190,13 +192,15 @@ const Sidebar: React.FC = () => {
         </Button>
         {renderNavMenuList}
       </Flex>
-      <Box width="100%" mt="auto">
-        <Link href="/settings">
-          <Button variant="ghost" style={{ width: "100%" }}>
-            <GearIcon />
-            Settings
-          </Button>
-        </Link>
+      <Box width="100%" mt="auto" p="3">
+        <Button
+          variant="ghost"
+          style={{ width: "100%" }}
+          onClick={() => setSettingsDialogOpen(true)}
+        >
+          <GearIcon />
+          Settings
+        </Button>
       </Box>
     </Flex>
   );

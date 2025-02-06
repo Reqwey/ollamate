@@ -1,4 +1,4 @@
-use super::models::{AppState, ChatMessage, Model};
+use super::models::{AppState, ChatMessage, Model, ModelOptions};
 use base64::{self, Engine};
 use futures_util::StreamExt;
 use serde_json::Value;
@@ -11,8 +11,10 @@ use tokio::sync::Mutex;
 pub async fn fetch_chat_data(
     app: AppHandle,
     app_state: State<'_, Mutex<AppState>>,
+    api_url: String,
     model_name: String,
     messages: Vec<ChatMessage>,
+    options: ModelOptions,
 ) -> Result<(), String> {
     let mut state = app_state.lock().await;
     state.stop_flag = false;
@@ -20,11 +22,12 @@ pub async fn fetch_chat_data(
 
     let client = Client::new();
     let response = client
-        .post("http://localhost:11434/api/chat")
+        .post(format!("{}/api/chat", api_url))
         .body(
             serde_json::json!({
                 "model": model_name,
                 "messages": messages,
+                "options": options
             })
             .to_string(),
         )
@@ -58,7 +61,7 @@ pub async fn fetch_chat_data(
         // 检查 stop_flag
         if stop_flag {
             let _ = client
-                .post("http://localhost:11434/api/chat")
+                .post(format!("{}/api/chat", api_url))
                 .body(
                     serde_json::json!({
                         "model": model_name.clone(),
@@ -87,10 +90,10 @@ pub async fn pause_chat(state: State<'_, Mutex<AppState>>) -> Result<(), String>
 }
 
 #[tauri::command]
-pub async fn fetch_model_list() -> Result<Vec<Model>, String> {
+pub async fn fetch_model_list(api_url: String) -> Result<Vec<Model>, String> {
     let client = Client::new();
     let response = client
-        .get("http://localhost:11434/api/tags")
+        .get(format!("{}/api/tags", api_url))
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -138,6 +141,7 @@ pub async fn open_images(app: AppHandle) -> Result<Vec<String>, String> {
 
 #[tauri::command]
 pub async fn generate_title(
+    api_url: String,
     model_name: String,
     messages: Vec<ChatMessage>,
 ) -> Result<String, String> {
@@ -153,7 +157,7 @@ pub async fn generate_title(
     msgs.push(prompt);
     let client = Client::new();
     let response = client
-        .post("http://localhost:11434/api/chat")
+        .post(format!("{}/api/chat", api_url))
         .body(
             serde_json::json!({
                 "model": model_name,

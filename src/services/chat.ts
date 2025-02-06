@@ -1,13 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { ChatMessage, LLMModel } from "@/models/chat";
+import { ChatMessage, ModelInfo } from "@/models/chat";
+import { ModelOptions } from "@/models/settings";
 
 export const fetchChatData = async (
+  apiUrl: string,
   modelName: string,
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  options: ModelOptions
 ) => {
   try {
-    await invoke("fetch_chat_data", { modelName, messages });
+    await invoke("fetch_chat_data", { apiUrl, modelName, messages, options });
   } catch (error) {
     console.error(error);
   }
@@ -31,9 +34,9 @@ export const pauseChat = async () => {
   }
 };
 
-export const fetchModelList = async () => {
+export const fetchModelList = async (apiUrl: string) => {
   try {
-    const models = await invoke<LLMModel[]>("fetch_model_list");
+    const models = await invoke<ModelInfo[]>("fetch_model_list", { apiUrl });
     return models;
   } catch (error) {
     console.error(error);
@@ -51,11 +54,16 @@ export const openImages = async () => {
 };
 
 export const generateTitle = async (
+  apiUrl: string,
   modelName: string,
   messages: ChatMessage[]
 ) => {
   try {
-    const title = await invoke<string>("generate_title", { modelName, messages });
+    const title = await invoke<string>("generate_title", {
+      apiUrl,
+      modelName,
+      messages,
+    });
     return title;
   } catch (error) {
     console.error(error);
