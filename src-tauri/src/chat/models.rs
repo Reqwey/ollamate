@@ -31,7 +31,6 @@ pub struct ModelOptions {
     pub repeat_penalty: f32,
     pub temperature: f32,
     pub seed: i32,
-    pub stop: String,
     pub num_predict: i32,
     pub top_k: i32,
     pub top_p: f32,

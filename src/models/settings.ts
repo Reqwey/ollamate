@@ -7,7 +7,6 @@ export interface ModelOptions {
   repeatPenalty: number;
   temperature: number;
   seed: number;
-  stop: string;
   numPredict: number;
   topK: number;
   topP: number;
@@ -23,7 +22,6 @@ export const defaultModelOptions: ModelOptions = {
   repeatPenalty: 1.1,
   temperature: 0.8,
   seed: 0,
-  stop: "",
   numPredict: -1,
   topK: 40,
   topP: 0.9,
