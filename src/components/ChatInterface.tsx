@@ -29,10 +29,16 @@ import {
   openImages,
   generateTitle,
 } from "@/services/chat";
-import { GearIcon, PaperPlaneIcon, PauseIcon, UploadIcon } from "@radix-ui/react-icons";
+import {
+  GearIcon,
+  PaperPlaneIcon,
+  PauseIcon,
+  UploadIcon,
+} from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
 import ModelSelectDropdown from "./ModelSelectDropdown";
+import { AppSettings, ModelSettings } from "@/models/settings";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -188,8 +194,11 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const router = useRouter();
   const { getShownChat, createChatMessage, updateChat } = useChatContext();
-  const { getAppSettings, getModelSettings, setSettingsDialogOpen } = useSettingsContext();
+  const { getAppSettings, getModelSettings, setSettingsDialogOpen } =
+    useSettingsContext();
   const [title, setTitle] = useState<string>("");
+  const [appSettings, setAppSettings] = useState<AppSettings>();
+  const [modelSettings, setModelSettings] = useState<ModelSettings>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [respondingMessage, setRespondingMessage] =
     useState<ChatMessage>(emptyMessage);
@@ -200,17 +209,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    getAppSettings().then(setAppSettings);
+  }, [getAppSettings]);
+
+  useEffect(() => {
+    getModelSettings().then(setModelSettings);
+  }, [getModelSettings]);
+
+  useEffect(() => {
     if (chatId) {
       setIsLoading(false);
       setImages([]);
+      setRespondingMessage(emptyMessage);
     }
   }, [chatId]);
 
   useEffect(() => {
-    getAppSettings().then((appSettings) =>
-      setModelName(appSettings.selectedModel)
-    );
-  }, [getAppSettings]);
+    if (appSettings) setModelName(appSettings.selectedModel);
+  }, [appSettings]);
 
   const syncSetMessages = useCallback(
     async (sync = false) => {
@@ -262,13 +278,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   }, [chatId, createChatMessage, images, input, messages, syncSetMessages]);
 
   const handleRespond = useCallback(async () => {
-    if (modelName) {
+    if (modelName && appSettings && modelSettings) {
       setRespondingMessage({ ...emptyMessage, llmModelName: modelName });
 
-      const modelSettings = await getModelSettings();
-      const apiUrl = (await getAppSettings()).ollamaApiUrl;
       await fetchChatData(
-        apiUrl,
+        appSettings.ollamaApiUrl,
         modelName,
         messages,
         modelSettings[modelName]
@@ -276,7 +290,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
 
       setIsLoading(false);
     }
-  }, [getAppSettings, getModelSettings, messages, modelName]);
+  }, [appSettings, messages, modelName, modelSettings]);
 
   useEffect(() => {
     if (
@@ -286,6 +300,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     ) {
       handleRespond();
     }
+
+    return () => {
+      pauseChat();
+    };
   }, [messages, handleRespond, isLoading]);
 
   useEffect(() => {
@@ -322,27 +340,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       !isLoading &&
       title === "Untitled chat"
     ) {
-      getAppSettings().then((settings) => {
-        if (settings.autoGenerateTitle) {
-          generateTitle(settings.ollamaApiUrl, modelName, messages).then(
-            (title) => {
-              if (title) {
-                updateChat(chatId, { title });
-              }
+      if (appSettings && appSettings.autoGenerateTitle) {
+        generateTitle(appSettings.ollamaApiUrl, modelName, messages).then(
+          (title) => {
+            if (title) {
+              updateChat(chatId, { title });
             }
-          );
-        }
-      });
+          }
+        );
+      }
     }
-  }, [
-    chatId,
-    getAppSettings,
-    isLoading,
-    messages,
-    modelName,
-    title,
-    updateChat,
-  ]);
+  }, [appSettings, chatId, isLoading, messages, modelName, title, updateChat]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({
@@ -360,23 +368,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       style={{ backgroundColor: "var(--gray-2)" }}
     >
       <Flex
-            mt="0"
-            direction="row"
-            align="center"
-            justify="between"
-            gap="3"
-            width="100%"
-            p="3"
-          >
-            <ModelSelectDropdown modelName={modelName} setModelName={setModelName} />
-            <IconButton
-              size="3"
-              variant="ghost"
-              onClick={() => setSettingsDialogOpen(true)}
-            >
-              <GearIcon />
-            </IconButton>
-          </Flex>
+        mt="0"
+        direction="row"
+        align="center"
+        justify="between"
+        gap="3"
+        width="100%"
+        p="3"
+      >
+        <ModelSelectDropdown
+          modelName={modelName}
+          setModelName={setModelName}
+        />
+        <IconButton
+          size="3"
+          variant="ghost"
+          onClick={() => setSettingsDialogOpen(true)}
+        >
+          <GearIcon />
+        </IconButton>
+      </Flex>
       <Flex
         gap="3"
         direction="column"

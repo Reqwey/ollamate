@@ -149,7 +149,8 @@ pub async fn generate_title(
         role: "system".to_string(),
         content:
             "You are a helpful assistant that generates a short title for the above conversation, \\
-         and then concludes the conversation with a single emoji."
+         and then concludes the conversation with a single emoji. \\
+         You should respond both items in given json format."
                 .to_string(),
         images: vec![],
     };
@@ -188,11 +189,11 @@ pub async fn generate_title(
         .await
         .map_err(|e| e.to_string())?;
     let json_response: Value = response.json().await.map_err(|e| e.to_string())?;
-	let content = json_response["message"]["content"]
+    let content = json_response["message"]["content"]
         .as_str()
         .unwrap_or_default();
     let structured_content: Value = serde_json::from_str(&content).unwrap_or_default();
-	let title = structured_content["title"]
+    let title = structured_content["title"]
         .as_str()
         .unwrap_or_default()
         .to_string();

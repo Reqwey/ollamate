@@ -70,7 +70,7 @@ const SettingsDialog: React.FC = () => {
                       <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
                           <RocketIcon />
-                          Auto Generate Title:
+                          Auto generate title:
                           <Switch
                             size="2"
                             checked={appSettings.autoGenerateTitle}
