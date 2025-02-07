@@ -9,6 +9,7 @@
     "core:default",
     "store:default",
     "http:default",
-    "dialog:default"
+    "dialog:default",
+    "shell:default"
   ]
 }

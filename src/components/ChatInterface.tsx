@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
@@ -6,19 +5,13 @@ import {
   Button,
   Flex,
   Card,
-  Code,
   IconButton,
   Spinner,
   Box,
   Grid,
   AspectRatio,
+  Badge,
 } from "@radix-ui/themes";
-import ReactMarkdown from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import rehypeHighlight from "rehype-highlight";
-import remarkMath from "remark-math";
-import "katex/dist/katex.min.css";
-import "highlight.js/styles/github.css";
 import { useChatContext } from "@/contexts/chat";
 import { ChatMessage } from "@/models/chat";
 import { UUID } from "crypto";
@@ -37,8 +30,9 @@ import {
 } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
-import ModelSelectDropdown from "./ModelSelectDropdown";
+import ModelSelectDropdown from "@/components/ModelSelectDropdown";
 import { AppSettings, ModelSettings } from "@/models/settings";
+import ChatMessageBubble from "@/components/ChatMessageBubble";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -48,144 +42,6 @@ const emptyMessage: ChatMessage = {
   prevId: null,
   nextIds: [],
   images: [],
-};
-
-interface MarkdownRendererProps {
-  content: string;
-}
-
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex, rehypeHighlight]}
-      components={{
-        code(props) {
-          const { children, className, node, ...rest } = props;
-          const match = /language-(\w+)/.exec(className || "");
-          return match ? (
-            <Card variant="surface" style={{ overflow: "auto", padding: 0 }}>
-              <Flex gap="1" direction="column" overflow="auto">
-                <Text
-                  size="1"
-                  color="gray"
-                  align="right"
-                  weight="bold"
-                  style={{
-                    borderBottom: "1px solid var(--gray-6)",
-                    padding: "var(--space-2)",
-                  }}
-                >
-                  {match[1].toUpperCase()}
-                </Text>
-                <code {...rest} className={className}>
-                  {children}
-                </code>
-              </Flex>
-            </Card>
-          ) : (
-            <code {...rest} className={className}>
-              {children}
-            </code>
-          );
-        },
-      }}
-    >
-      {content
-        .replaceAll("\\[", "$$")
-        .replaceAll("\\]", "$$")
-        .replaceAll("\\(", " $")
-        .replaceAll("\\)", "$ ")}
-    </ReactMarkdown>
-  );
-};
-
-interface ChatMessageBubbleProps {
-  message: ChatMessage;
-  respondingMode: boolean;
-}
-
-const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
-  message,
-  respondingMode,
-}) => {
-  return (
-    <Flex
-      direction="column"
-      maxWidth="100%"
-      align={message.role === "user" ? "end" : "start"}
-      p="3"
-      gap="2"
-    >
-      <Text
-        as="div"
-        weight="bold"
-        style={{
-          width: "100%",
-          textAlign: message.role === "user" ? "end" : "start",
-        }}
-      >
-        {message.role === "assistant" && message.llmModelName
-          ? message.llmModelName
-          : message.role}
-      </Text>
-      <Card
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--space-1)",
-          maxWidth: "100%",
-        }}
-      >
-        {message.content.startsWith("<think>") ? (
-          <>
-            <Card
-              style={{
-                backgroundColor: "var(--accent-a5)",
-                width: "min(max-content, 100%)",
-              }}
-            >
-              <Code>{"Reasoning Content"}</Code>
-              <MarkdownRenderer
-                content={
-                  message.content.split("<think>")[1].split("</think>")[0]
-                }
-              />
-            </Card>
-            {message.content.includes("</think>") && (
-              <MarkdownRenderer
-                content={message.content.split("</think>")[1]}
-              />
-            )}
-          </>
-        ) : (
-          <MarkdownRenderer content={message.content} />
-        )}
-        {respondingMode && <Spinner />}
-        {!!message.images.length && (
-          <Flex gap="2" direction="row" wrap="wrap" width="fit-content">
-            {message.images.map((image, index) => (
-              <Card
-                key={index}
-                style={{ width: "100px", height: "100px", padding: "0" }}
-              >
-                <img
-                  src={`data:image/png;base64,${image}`}
-                  alt=""
-                  style={{
-                    objectFit: "cover",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "var(--radius-2)",
-                  }}
-                />
-              </Card>
-            ))}
-          </Flex>
-        )}
-      </Card>
-    </Flex>
-  );
 };
 
 interface ChatInterfaceProps {

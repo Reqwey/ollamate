@@ -29,3 +29,4 @@ futures-util = "0.3"
 tokio = { version = "1", features = ["full"] }
 tauri-plugin-dialog = "2"
 base64 = "0.22.1"
+tauri-plugin-shell = "2"
