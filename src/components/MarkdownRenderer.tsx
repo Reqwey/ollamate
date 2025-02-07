@@ -1,6 +1,4 @@
 
-import "katex/dist/katex.min.css";
-import "highlight.js/styles/github.css";
 import { Blockquote, Card, Flex, Code, Text, Link } from "@radix-ui/themes";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";

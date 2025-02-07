@@ -1,4 +1,3 @@
-import "@/styles/settings.css";
 import { useSettingsContext } from "@/contexts/settings";
 import { AppSettings, ModelSettings, AccentColor } from "@/models/settings";
 import {
