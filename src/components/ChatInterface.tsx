@@ -6,7 +6,6 @@ import {
   Button,
   Flex,
   Card,
-  DropdownMenu,
   Code,
   IconButton,
   Spinner,
@@ -21,19 +20,19 @@ import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github.css";
 import { useChatContext } from "@/contexts/chat";
-import { ChatMessage, ModelInfo } from "@/models/chat";
+import { ChatMessage } from "@/models/chat";
 import { UUID } from "crypto";
 import {
   fetchChatData,
   onChatResponse,
-  fetchModelList,
   pauseChat,
   openImages,
   generateTitle,
 } from "@/services/chat";
-import { GearIcon, PauseIcon, UploadIcon } from "@radix-ui/react-icons";
+import { GearIcon, PaperPlaneIcon, PauseIcon, UploadIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
+import ModelSelectDropdown from "./ModelSelectDropdown";
 
 const emptyMessage: ChatMessage = {
   id: "0-0-0-0-0",
@@ -189,18 +188,12 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const router = useRouter();
   const { getShownChat, createChatMessage, updateChat } = useChatContext();
-  const {
-    getAppSettings,
-    getModelSettings,
-    saveAppSettings,
-    setSettingsDialogOpen,
-  } = useSettingsContext();
+  const { getAppSettings, getModelSettings, setSettingsDialogOpen } = useSettingsContext();
   const [title, setTitle] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [respondingMessage, setRespondingMessage] =
     useState<ChatMessage>(emptyMessage);
   const [modelName, setModelName] = useState<string>();
-  const [modelList, setModelList] = useState<ModelInfo[]>([]);
   const [input, setInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -217,16 +210,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     getAppSettings().then((appSettings) =>
       setModelName(appSettings.selectedModel)
     );
-  }, [getAppSettings]);
-
-  useEffect(() => {
-    const loadModelList = async () => {
-      const apiUrl = (await getAppSettings()).ollamaApiUrl;
-      const models = await fetchModelList(apiUrl);
-      setModelList(models);
-    };
-
-    loadModelList();
   }, [getAppSettings]);
 
   const syncSetMessages = useCallback(
@@ -377,54 +360,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       style={{ backgroundColor: "var(--gray-2)" }}
     >
       <Flex
-        mt="0"
-        direction="row"
-        align="center"
-        justify="between"
-        gap="3"
-        width="100%"
-        p="3"
-        style={{ borderBottom: "1px solid var(--gray-6)" }}
-      >
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <Button variant="soft">
-              {modelName || "Select a model"}
-              <DropdownMenu.TriggerIcon />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content variant="soft">
-            <DropdownMenu.RadioGroup value={modelName}>
-              {modelList.map((model) => (
-                <DropdownMenu.RadioItem
-                  key={model.name}
-                  value={model.name}
-                  onSelect={() => {
-                    setModelName(model.name);
-                    saveAppSettings({ selectedModel: model.name });
-                  }}
-                >
-                  <Text>{model.name}</Text>
-                  <Code>{model.parameterSize}</Code>
-                </DropdownMenu.RadioItem>
-              ))}
-            </DropdownMenu.RadioGroup>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-        <IconButton
-          size="3"
-          variant="ghost"
-          onClick={() => setSettingsDialogOpen(true)}
-        >
-          <GearIcon />
-        </IconButton>
-      </Flex>
+            mt="0"
+            direction="row"
+            align="center"
+            justify="between"
+            gap="3"
+            width="100%"
+            p="3"
+          >
+            <ModelSelectDropdown modelName={modelName} setModelName={setModelName} />
+            <IconButton
+              size="3"
+              variant="ghost"
+              onClick={() => setSettingsDialogOpen(true)}
+            >
+              <GearIcon />
+            </IconButton>
+          </Flex>
       <Flex
         gap="3"
         direction="column"
         flexGrow="1"
         overflowY="auto"
         width="100%"
+        style={{ borderTop: "1px solid var(--gray-6)" }}
       >
         {messages.map((message, index) => (
           <ChatMessageBubble
@@ -497,6 +456,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             style={{ flex: 1 }}
           >
             Send
+            <PaperPlaneIcon />
           </Button>
         </Flex>
       </Flex>

@@ -1,5 +1,6 @@
+import "@/styles/settings.css";
 import { useSettingsContext } from "@/contexts/settings";
-import { AppSettings, ModelSettings } from "@/models/settings";
+import { AppSettings, ModelSettings, AccentColor } from "@/models/settings";
 import {
   Box,
   Button,
@@ -7,15 +8,22 @@ import {
   DataList,
   Dialog,
   Flex,
+  Grid,
   Inset,
   Radio,
-  RadioCards,
+  Separator,
   Switch,
   Tabs,
   Text,
   TextField,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
+import { ColorWheelIcon, GlobeIcon, RocketIcon } from "@radix-ui/react-icons";
+
+function upperFirst(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 const SettingsDialog: React.FC = () => {
   const {
@@ -59,8 +67,9 @@ const SettingsDialog: React.FC = () => {
                 <Tabs.Content value="app">
                   {appSettings && (
                     <Flex direction="column" gap="3" p="4">
-                      <Text as="label" size="2">
+                      <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
+                          <RocketIcon />
                           Auto Generate Title:
                           <Switch
                             size="2"
@@ -76,8 +85,11 @@ const SettingsDialog: React.FC = () => {
                         </Flex>
                       </Text>
 
-                      <Text as="label" size="2">
+                      <Separator my="1" size="4" />
+
+                      <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
+                          <GlobeIcon />
                           Ollama API URL:
                           <TextField.Root
                             size="2"
@@ -91,6 +103,41 @@ const SettingsDialog: React.FC = () => {
                             }}
                           />
                         </Flex>
+                      </Text>
+
+                      <Separator my="1" size="4" />
+
+                      <Text weight="light" as="label" size="2">
+                        <Flex gap="2" align="center">
+                          <ColorWheelIcon />
+                          Accent color:
+                        </Flex>
+                        <Grid mt="1" columns="13" gap="2" role="group">
+                          {Object.values(AccentColor).map((color) => (
+                            <label
+                              key={color}
+                              className="rt-ThemePanelSwatch"
+                              style={{ backgroundColor: `var(--${color}-9)` }}
+                            >
+                              <Tooltip content={`${upperFirst(color)}`}>
+                                <input
+                                  className="rt-ThemePanelSwatchInput"
+                                  type="radio"
+                                  name="accentColor"
+                                  value={color}
+                                  checked={appSettings.accentColor === color}
+                                  onChange={(event) =>
+                                    setAppSettings({
+                                      ...appSettings,
+                                      accentColor: event.target
+                                        .value as AccentColor,
+                                    })
+                                  }
+                                />
+                              </Tooltip>
+                            </label>
+                          ))}
+                        </Grid>
                       </Text>
                     </Flex>
                   )}
