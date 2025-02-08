@@ -10,6 +10,7 @@
     "store:default",
     "http:default",
     "dialog:default",
-    "shell:default"
+    "shell:default",
+    "clipboard-manager:allow-write-text"
   ]
 }

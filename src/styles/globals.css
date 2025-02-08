@@ -6,7 +6,7 @@ body {
 .rt-Card.selected {
   background-color: var(--accent-7);
   .rt-Text {
-    color: var(--accent-9);
+    color: var(--accent-11);
   }
 }
 

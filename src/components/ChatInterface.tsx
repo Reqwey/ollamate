@@ -2,15 +2,13 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
   TextArea,
-  Button,
   Flex,
-  Card,
   IconButton,
-  Spinner,
   Box,
   Grid,
   AspectRatio,
-  Badge,
+  Kbd,
+  Tooltip,
 } from "@radix-ui/themes";
 import { useChatContext } from "@/contexts/chat";
 import { ChatMessage } from "@/models/chat";
@@ -118,7 +116,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   }, []);
 
   const handleSend = useCallback(async () => {
-    if (chatId && input.trim()) {
+    if (chatId && input.trim() && modelName) {
       await createChatMessage(
         chatId,
         messages.length ? messages[messages.length - 1].id : null,
@@ -131,7 +129,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       setImages([]);
       setIsLoading(true);
     }
-  }, [chatId, createChatMessage, images, input, messages, syncSetMessages]);
+  }, [
+    chatId,
+    createChatMessage,
+    images,
+    input,
+    messages,
+    modelName,
+    syncSetMessages,
+  ]);
 
   const handleRespond = useCallback(async () => {
     if (modelName && appSettings && modelSettings) {
@@ -279,12 +285,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           borderRadius: "var(--radius-5) var(--radius-5) 0 0",
         }}
       >
-        <TextArea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          style={{ flex: 1 }}
-        />
         {!!images.length && (
           <Grid columns={{ xs: "5", md: "8", lg: "9" }} gap="3" width="auto">
             {images.map((image, index) => (
@@ -303,28 +303,62 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             ))}
           </Grid>
         )}
-        <Flex direction="row" gap="3" justify="between">
+        <Flex direction="row" gap="3" justify="between" align="center">
           {isLoading && modelName && (
             <IconButton onClick={pauseChat}>
               <PauseIcon />
             </IconButton>
           )}
-          <Button
-            variant="soft"
-            onClick={() => openImages().then((list) => list && setImages(list))}
-          >
-            <UploadIcon />
-            Upload Images
-          </Button>
-          <Button
-            disabled={!modelName || !input.trim()}
-            loading={isLoading}
-            onClick={handleSend}
+          <Tooltip content="Upload images">
+            <IconButton
+              radius="full"
+              variant="soft"
+              onClick={() =>
+                openImages().then((list) => list && setImages(list))
+              }
+            >
+              <UploadIcon />
+            </IconButton>
+          </Tooltip>
+          <TextArea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            radius="large"
             style={{ flex: 1 }}
-          >
-            Send
-            <PaperPlaneIcon />
-          </Button>
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.ctrlKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+          />
+          <Tooltip content="Send message">
+            <IconButton
+              radius="full"
+              disabled={!modelName || !input.trim()}
+              loading={isLoading}
+              onClick={handleSend}
+            >
+              <PaperPlaneIcon />
+            </IconButton>
+          </Tooltip>
+        </Flex>
+
+        <Flex justify="between">
+          <Text color="gray" size="1">
+            Conversations are only saved locally.
+          </Text>
+          <Flex gap="1" align="center">
+            <Kbd size="1">Enter</Kbd>
+            <Text color="gray" size="1">
+              to add a line break.
+            </Text>
+            <Kbd size="1">Ctrl+Enter</Kbd>
+            <Text color="gray" size="1">
+              to send.
+            </Text>
+          </Flex>
         </Flex>
       </Flex>
     </Flex>
