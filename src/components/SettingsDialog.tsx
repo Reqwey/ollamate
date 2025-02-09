@@ -9,6 +9,7 @@ import {
   Flex,
   Grid,
   Inset,
+  Link,
   Radio,
   Separator,
   Switch,
@@ -18,7 +19,10 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
-import { ColorWheelIcon, GlobeIcon, RocketIcon } from "@radix-ui/react-icons";
+import { ColorWheelIcon, GlobeIcon, RocketIcon, StarFilledIcon } from "@radix-ui/react-icons";
+import logoSrc from "@/assets/logo.png";
+import { getVersion } from '@tauri-apps/api/app';
+import { open } from "@tauri-apps/plugin-shell";
 
 function upperFirst(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -36,6 +40,7 @@ const SettingsDialog: React.FC = () => {
 
   const [appSettings, setAppSettings] = useState<AppSettings>();
   const [modelSettings, setModelSettings] = useState<ModelSettings>();
+  const [version, setVersion] = useState<string>();
 
   useEffect(() => {
     getAppSettings().then(setAppSettings);
@@ -45,6 +50,10 @@ const SettingsDialog: React.FC = () => {
     getModelSettings().then(setModelSettings);
   }, [getModelSettings]);
 
+  useEffect(() => {
+    getVersion().then(setVersion);
+  }, []);
+
   return (
     <Dialog.Root open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
       <Dialog.Content
@@ -52,6 +61,7 @@ const SettingsDialog: React.FC = () => {
           display: "flex",
           flexDirection: "column",
         }}
+        aria-labelledby="settings-dialog"
       >
         <Dialog.Title>Settings</Dialog.Title>
         <Inset side="x">
@@ -60,6 +70,7 @@ const SettingsDialog: React.FC = () => {
               <Tabs.List>
                 <Tabs.Trigger value="app">App Settings</Tabs.Trigger>
                 <Tabs.Trigger value="models">Model Options</Tabs.Trigger>
+                <Tabs.Trigger value="about">About</Tabs.Trigger>
               </Tabs.List>
 
               <Box pt="3" width="100%" height="100%">
@@ -240,6 +251,30 @@ const SettingsDialog: React.FC = () => {
                       </Flex>
                     </Flex>
                   )}
+                </Tabs.Content>
+
+                <Tabs.Content
+                value="about"
+                >
+                  <Flex direction="column" gap="2" align="center">
+                    <img src={logoSrc.src} alt="Logo" width="100" height="100" />
+                    <Text size="4" weight="bold">
+                      OllaMate
+                    </Text>
+                    <Text size="2" color="gray">
+                      Version: {version}
+                    </Text>
+                    <Button
+                      variant="soft"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        open("https://github.com/Reqwey/ollamate");
+                      }}
+                    >
+                      <StarFilledIcon />
+                      Star
+                    </Button>
+                  </Flex>
                 </Tabs.Content>
               </Box>
             </Tabs.Root>
