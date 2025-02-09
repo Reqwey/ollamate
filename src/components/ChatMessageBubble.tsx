@@ -13,23 +13,36 @@ import {
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import {
   CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   CopyIcon,
   TrashIcon,
   UpdateIcon,
 } from "@radix-ui/react-icons";
 import { useCallback, useState } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { UUID } from "crypto";
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
   respondingMode: boolean;
+  alternatives: UUID[];
+  onDelete?: (messageId: UUID) => Promise<void>;
+  onReGenerate?: (message: ChatMessage) => Promise<void>;
+  onChangeShownMessage?: (fromId: UUID, toId: UUID) => void;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   message,
   respondingMode,
+  alternatives,
+  onDelete,
+  onReGenerate,
+  onChangeShownMessage,
 }) => {
   const [copied, setCopied] = useState(false);
+
+  const selfPosition = alternatives.findIndex((id) => id === message.id);
 
   const handleCopy = async () => {
     await writeText(message.content);
@@ -122,7 +135,48 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         )}
         <Inset side="bottom">
           <Separator size="4" />
-          <Flex gap="2" direction="row" p="2">
+          <Flex gap="3" direction="row" p="2">
+            {alternatives.length >= 2 && selfPosition !== -1 && (
+              <Flex gap="2" direction="row">
+                {selfPosition > 0 && (
+                  <IconButton
+                    size="1"
+                    variant="ghost"
+                    color="gray"
+                    onClick={() => {
+                      if (onChangeShownMessage) {
+                        onChangeShownMessage(
+                          message.id,
+                          alternatives[selfPosition - 1]
+                        );
+                      }
+                    }}
+                  >
+                    <ChevronLeftIcon />
+                  </IconButton>
+                )}
+                <Text size="1" color="gray">
+                  {selfPosition + 1}/{alternatives.length}
+                </Text>
+                {selfPosition < alternatives.length - 1 && (
+                  <IconButton
+                    size="1"
+                    variant="ghost"
+                    color="gray"
+                    onClick={() => {
+                      if (onChangeShownMessage) {
+                        onChangeShownMessage(
+                          message.id,
+                          alternatives[selfPosition + 1]
+                        );
+                      }
+                    }}
+                  >
+                    <ChevronRightIcon />
+                  </IconButton>
+                )}
+              </Flex>
+            )}
             <Tooltip content="Copy raw" side="bottom">
               <IconButton
                 color={copied ? "green" : undefined}
@@ -133,23 +187,29 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 {copied ? <CheckIcon /> : <CopyIcon />}
               </IconButton>
             </Tooltip>
-            {message.role === "assistant" && (
+            {message.role === "assistant" && !!onReGenerate && (
               <Tooltip content="Re-generate" side="bottom">
-                <IconButton size="1" variant="ghost" onClick={() => {}}>
+                <IconButton
+                  size="1"
+                  variant="ghost"
+                  onClick={() => onReGenerate(message)}
+                >
                   <UpdateIcon />
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip content="Delete message" side="bottom">
-              <IconButton
-                size="1"
-                variant="ghost"
-                color="red"
-                onClick={() => {}}
-              >
-                <TrashIcon />
-              </IconButton>
-            </Tooltip>
+            {!!onDelete && (
+              <Tooltip content="Delete message" side="bottom">
+                <IconButton
+                  size="1"
+                  variant="ghost"
+                  color="red"
+                  onClick={() => onDelete(message.id)}
+                >
+                  <TrashIcon />
+                </IconButton>
+              </Tooltip>
+            )}
           </Flex>
         </Inset>
       </Card>

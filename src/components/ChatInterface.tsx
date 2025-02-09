@@ -47,7 +47,13 @@ interface ChatInterfaceProps {
 }
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const router = useRouter();
-  const { getShownChat, createChatMessage, updateChat } = useChatContext();
+  const {
+    getShownChat,
+    createChatMessage,
+    changeShownChatMessage,
+    deleteChatMessage,
+    updateChat,
+  } = useChatContext();
   const { getAppSettings, getModelSettings, setSettingsDialogOpen } =
     useSettingsContext();
   const [title, setTitle] = useState<string>("");
@@ -153,6 +159,51 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       setIsLoading(false);
     }
   }, [appSettings, messages, modelName, modelSettings]);
+
+  const handleDelete = useCallback(
+    async (messageId: UUID) => {
+      await deleteChatMessage(chatId, messageId);
+      await syncSetMessages(true);
+    },
+    [chatId, deleteChatMessage, syncSetMessages]
+  );
+
+  const handleReGenerate = useCallback(
+    async (message: ChatMessage) => {
+      if (message.role === "assistant") {
+        const newMessageId = await createChatMessage(
+          chatId,
+          message.prevId,
+          "assistant",
+          "",
+          [],
+          modelName
+        );
+        if (newMessageId) {
+          await changeShownChatMessage(chatId, message.id, newMessageId);
+          await syncSetMessages(true);
+          await handleDelete(newMessageId);
+          setIsLoading(true);
+        }
+      }
+    },
+    [
+      changeShownChatMessage,
+      chatId,
+      createChatMessage,
+      handleDelete,
+      modelName,
+      syncSetMessages,
+    ]
+  );
+
+  const handleChangeShownMessage = useCallback(
+    async (fromId: UUID, toId: UUID) => {
+      await changeShownChatMessage(chatId, fromId, toId);
+      await syncSetMessages(true);
+    },
+    [chatId, changeShownChatMessage, syncSetMessages]
+  );
 
   useEffect(() => {
     if (
@@ -263,12 +314,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             key={index}
             message={message}
             respondingMode={false}
+            alternatives={
+              message.prevId
+                ? messages.filter((m) => m.id === message.prevId)[0].nextIds
+                : []
+            }
+            onDelete={handleDelete}
+            onReGenerate={handleReGenerate}
+            onChangeShownMessage={handleChangeShownMessage}
           />
         ))}
         {isLoading && (
           <ChatMessageBubble
             message={respondingMessage}
             respondingMode={true}
+            alternatives={[]}
           />
         )}
         <Box ref={messageEndRef} />

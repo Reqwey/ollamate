@@ -23,9 +23,8 @@ interface ChatContextProps {
 		content: string,
 		images: string[],
 		llmModelName?: string
-	) => Promise<void>;
-	updateChatMessage: (chatId: UUID, message: ChatMessage) => Promise<void>;
-	changeShownChatMessage: (chatId: UUID, fromId: UUID, toId: UUID) => void;
+	) => Promise<UUID | null>;
+	changeShownChatMessage: (chatId: UUID, fromId: UUID, toId: UUID) => Promise<void>;
 	deleteChatMessage: (chatId: UUID, messageId: UUID) => Promise<void>;
 }
 
@@ -170,7 +169,7 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 			const store = await fetchStore();
 
 			const chat = await store.get<StoredChat>(chatId);
-			if (!chat) return;
+			if (!chat) return null;
 			const id = crypto.randomUUID() as UUID;
 
 			await updateChat(chatId, {
@@ -192,45 +191,8 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 					},
 				],
 			});
-		},
-		[fetchStore, updateChat]
-	);
 
-	const updateChatMessage = useCallback(
-		async (chatId: UUID, message: ChatMessage) => {
-			const store = await fetchStore();
-
-			const chat = await store.get<StoredChat>(chatId);
-			if (!chat) return;
-			const deleteMessageAndDescendants = (
-				messages: ChatMessage[],
-				messageId: UUID
-			): ChatMessage[] => {
-				const messageToDelete = messages.find(
-					(message) => message.id === messageId
-				);
-				if (!messageToDelete) return messages;
-
-				const descendantIds = messageToDelete.nextIds;
-				let updatedMessages = messages.filter(
-					(message) => message.id !== messageId
-				);
-
-				descendantIds.forEach((descendantId) => {
-					updatedMessages = deleteMessageAndDescendants(
-						updatedMessages,
-						descendantId
-					);
-				});
-
-				return updatedMessages;
-			};
-
-			const updatedMessages = [
-				...deleteMessageAndDescendants(chat.messages, message.id),
-				message,
-			];
-			await updateChat(chatId, { messages: updatedMessages });
+			return id;
 		},
 		[fetchStore, updateChat]
 	);
@@ -291,7 +253,6 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
 				deleteChat,
 				updateChat,
 				createChatMessage,
-				updateChatMessage,
 				changeShownChatMessage,
 				deleteChatMessage,
 			}}
