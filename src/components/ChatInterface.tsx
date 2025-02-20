@@ -245,6 +245,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   ]);
 
   useEffect(() => {
+    let isMounted = true;
+    const currentChatId = chatId;
+
     if (
       chatId &&
       modelName &&
@@ -255,14 +258,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     ) {
       if (appSettings && appSettings.autoGenerateTitle) {
         generateTitle(appSettings.ollamaApiUrl, modelName, messages).then(
-          (title) => {
-            if (title) {
-              updateChat(chatId, { title });
+          (generatedTitle) => {
+            if (isMounted && generatedTitle && currentChatId === chatId) {
+              updateChat(chatId, { title: generatedTitle });
             }
           }
         );
       }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [appSettings, chatId, isLoading, messages, modelName, title, updateChat]);
 
   useEffect(() => {

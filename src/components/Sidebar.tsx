@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -37,9 +37,26 @@ interface NavMenuProps {
 const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
   const { id, title, setTitle, onDelete, updatedAt } = value;
   const [editMode, setEditMode] = useState(false);
-  const [newTitle, setNewTitle] = useState(title);
+  const [newTitle, setNewTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const currentId = router.query.id as string;
+
+  useEffect(() => {
+    setNewTitle(title);
+  }, [title]);
+
+  useEffect(() => {
+    if (editMode && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editMode]);
+
+  // 当 input 失去焦点时将 editMode 设为 false
+  const handleInputBlur = () => {
+    setEditMode(false);
+  };
+
   return (
     <Card
       size="1"
@@ -53,6 +70,8 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
     >
       {editMode ? (
         <TextField.Root
+          ref={inputRef}
+          onBlur={handleInputBlur}
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
         >
