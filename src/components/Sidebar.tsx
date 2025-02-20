@@ -1,4 +1,10 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Button,
@@ -6,14 +12,11 @@ import {
   DropdownMenu,
   Flex,
   IconButton,
-  RadioCards,
   Text,
   TextField,
 } from "@radix-ui/themes";
-import Link from "next/link";
 import {
   ChatBubbleIcon,
-  CheckIcon,
   GearIcon,
   HamburgerMenuIcon,
   Pencil2Icon,
@@ -52,8 +55,8 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
     }
   }, [editMode]);
 
-  // 当 input 失去焦点时将 editMode 设为 false
   const handleInputBlur = () => {
+    setTitle(newTitle);
     setEditMode(false);
   };
 
@@ -78,24 +81,13 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
           <TextField.Slot>
             <Pencil2Icon />
           </TextField.Slot>
-          <TextField.Slot>
-            <IconButton
-              variant="ghost"
-              onClick={() => {
-                setTitle(newTitle);
-                setEditMode(false);
-              }}
-            >
-              <CheckIcon />
-            </IconButton>
-          </TextField.Slot>
         </TextField.Root>
       ) : (
         <Flex gap="3" align="center" justify="between">
           <Flex gap="3" align="center" justify="between">
             <ChatBubbleIcon color="gray" />
             <Flex direction="column">
-              <Text size="3">{title}</Text>
+              <Text size="3">{title || "Untitled chat"}</Text>
               <Text size="1" color="gray">
                 {updatedAt.toLocaleString()}
               </Text>
@@ -123,6 +115,7 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
     </Card>
   );
 };
+
 const Sidebar: React.FC = () => {
   const { getChatInfoList, createChat, updateChat, deleteChat } =
     useChatContext();

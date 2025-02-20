@@ -254,7 +254,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       messages.length &&
       messages[messages.length - 1].role === "assistant" &&
       !isLoading &&
-      title === "Untitled chat"
+      title.length === 0
     ) {
       if (appSettings && appSettings.autoGenerateTitle) {
         generateTitle(appSettings.ollamaApiUrl, modelName, messages).then(
