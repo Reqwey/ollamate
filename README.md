@@ -19,17 +19,17 @@ Made with [🦀 Tauri](https://tauri.app) + [▲ Next.js](https://nextjs.org) an
 ## Getting Started
 
 ```bash
-npm install
+pnpm install
 ```
 
 - Start developing:
 
   ```bash
-  npm tauri dev
+  pnpm tauri dev
   ```
 
 - Build for production:
 
   ```bash
-  npm tauri build
+  pnpm tauri build
   ```
