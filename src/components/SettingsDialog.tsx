@@ -83,15 +83,15 @@ const SettingsDialog: React.FC = () => {
                           Auto generate title:
                           <Switch
                             size="2"
-                            checked={appSettings.autoGenerateTitle}
+                            checked={appSettings.autoTitleGeneration}
                             onCheckedChange={(checked) => {
                               setAppSettings({
                                 ...appSettings,
-                                autoGenerateTitle: checked,
+                                autoTitleGeneration: checked,
                               });
                             }}
                           />
-                          {appSettings.autoGenerateTitle ? "On" : "Off"}
+                          {appSettings.autoTitleGeneration ? "On" : "Off"}
                         </Flex>
                       </Text>
 

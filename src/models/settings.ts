@@ -61,14 +61,14 @@ export enum AccentColor {
 
 export type AppSettings = {
   ollamaApiUrl: string;
-  autoGenerateTitle: boolean;
+  autoTitleGeneration: boolean;
   selectedModel: string | undefined;
   accentColor: AccentColor;
 };
 
 export const defaultAppSettings: AppSettings = {
   ollamaApiUrl: "http://localhost:11434",
-  autoGenerateTitle: true,
+  autoTitleGeneration: true,
   selectedModel: undefined,
   accentColor: AccentColor.Indigo,
 };

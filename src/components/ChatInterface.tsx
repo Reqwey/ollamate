@@ -9,6 +9,8 @@ import {
   AspectRatio,
   Kbd,
   Tooltip,
+  Callout,
+  Spinner,
 } from "@radix-ui/themes";
 import { useChatContext } from "@/contexts/chat";
 import { ChatMessage } from "@/models/chat";
@@ -65,7 +67,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const [modelName, setModelName] = useState<string>();
   const [input, setInput] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isMessageGenerating, setIsMessageGenerating] =
+    useState<boolean>(false);
+  const [isTitleGenerating, setIsTitleGenerating] = useState<boolean>(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,7 +82,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
 
   useEffect(() => {
     if (chatId) {
-      setIsLoading(false);
+      setIsMessageGenerating(false);
+      setIsTitleGenerating(false);
       setImages([]);
       setRespondingMessage(emptyMessage);
     }
@@ -133,7 +138,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       await syncSetMessages(true);
       setInput("");
       setImages([]);
-      setIsLoading(true);
+      setIsMessageGenerating(true);
     }
   }, [
     chatId,
@@ -156,9 +161,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
         modelSettings[modelName]
       );
 
-      setIsLoading(false);
+      setIsMessageGenerating(false);
+
+      if (appSettings.autoTitleGeneration && title === "") {
+        setIsTitleGenerating(true);
+      }
     }
-  }, [appSettings, messages, modelName, modelSettings]);
+  }, [appSettings, messages, modelName, modelSettings, title]);
 
   const handleDelete = useCallback(
     async (messageId: UUID) => {
@@ -183,7 +192,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           await changeShownChatMessage(chatId, message.id, newMessageId);
           await syncSetMessages(true);
           await handleDelete(newMessageId);
-          setIsLoading(true);
+          setIsMessageGenerating(true);
         }
       }
     },
@@ -209,7 +218,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     if (
       messages.length &&
       messages[messages.length - 1].role === "user" &&
-      isLoading
+      isMessageGenerating
     ) {
       handleRespond();
     }
@@ -217,10 +226,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     return () => {
       pauseChat();
     };
-  }, [messages, handleRespond, isLoading]);
+  }, [messages, handleRespond, isMessageGenerating]);
 
   useEffect(() => {
-    if (chatId && !isLoading && respondingMessage.content) {
+    if (chatId && !isMessageGenerating && respondingMessage.content) {
       createChatMessage(
         chatId,
         messages[messages.length - 1].id,
@@ -236,7 +245,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   }, [
     chatId,
     createChatMessage,
-    isLoading,
+    isMessageGenerating,
     messages,
     modelName,
     respondingMessage.content,
@@ -245,32 +254,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   ]);
 
   useEffect(() => {
-    let isMounted = true;
-    const currentChatId = chatId;
-
-    if (
-      chatId &&
-      modelName &&
-      messages.length &&
-      messages[messages.length - 1].role === "assistant" &&
-      !isLoading &&
-      title.length === 0
-    ) {
-      if (appSettings && appSettings.autoGenerateTitle) {
-        generateTitle(appSettings.ollamaApiUrl, modelName, messages).then(
-          (generatedTitle) => {
-            if (isMounted && generatedTitle && currentChatId === chatId) {
-              updateChat(chatId, { title: generatedTitle });
-            }
+    if (isTitleGenerating && appSettings && modelName) {
+      generateTitle(appSettings.ollamaApiUrl, modelName, messages).then(
+        (generatedTitle) => {
+          if (generatedTitle) {
+            setTitle(title);
+            setIsTitleGenerating(false);
+            updateChat(chatId, { title: generatedTitle });
           }
-        );
-      }
+        }
+      );
     }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [appSettings, chatId, isLoading, messages, modelName, title, updateChat]);
+  }, [
+    appSettings,
+    chatId,
+    isTitleGenerating,
+    messages,
+    modelName,
+    title,
+    updateChat,
+  ]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({
@@ -278,7 +281,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       inline: "end",
       behavior: "smooth",
     });
-  }, [isLoading, respondingMessage.content, messages]);
+  }, [isMessageGenerating, respondingMessage.content, messages]);
 
   return (
     <Flex
@@ -331,7 +334,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             onChangeShownMessage={handleChangeShownMessage}
           />
         ))}
-        {isLoading && (
+        {isMessageGenerating && (
           <ChatMessageBubble
             message={respondingMessage}
             respondingMode={true}
@@ -352,6 +355,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           borderRadius: "var(--radius-5) var(--radius-5) 0 0",
         }}
       >
+        {isTitleGenerating && (
+          <Callout.Root color="gray">
+            <Callout.Icon>
+              <Spinner />
+            </Callout.Icon>
+            <Callout.Text>Generating title...</Callout.Text>
+          </Callout.Root>
+        )}
+
         {!!images.length && (
           <Grid columns={{ xs: "5", md: "8", lg: "9" }} gap="3" width="auto">
             {images.map((image, index) => (
@@ -371,15 +383,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           </Grid>
         )}
         <Flex direction="row" gap="3" justify="between" align="center">
-          {isLoading && modelName && (
-            <IconButton onClick={pauseChat}>
-              <PauseIcon />
-            </IconButton>
-          )}
           <Tooltip content="Upload images">
             <IconButton
               radius="full"
               variant="soft"
+              loading={isMessageGenerating || isTitleGenerating}
               onClick={() =>
                 openImages().then((list) => list && setImages(list))
               }
@@ -389,6 +397,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
           </Tooltip>
           <TextArea
             value={input}
+            disabled={isMessageGenerating || isTitleGenerating}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             radius="large"
@@ -400,14 +409,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
               }
             }}
           />
-          <Tooltip content="Send message">
+          <Tooltip
+            content={
+              isMessageGenerating ? "Generating message..." : "Send message"
+            }
+          >
             <IconButton
+              disabled={input.length === 0 && !isMessageGenerating}
               radius="full"
-              disabled={!modelName || !input.trim()}
-              loading={isLoading}
-              onClick={handleSend}
+              onClick={isMessageGenerating ? pauseChat : handleSend}
             >
-              <PaperPlaneIcon />
+              {isMessageGenerating ? <PauseIcon /> : <PaperPlaneIcon />}
             </IconButton>
           </Tooltip>
         </Flex>

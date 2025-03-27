@@ -108,8 +108,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               />
             )}
           </>
-        ) : (
+        ) : message.role === "assistant" ? (
           <MarkdownRenderer content={message.content} />
+        ) : (
+          <Text>{message.content}</Text>
         )}
         {respondingMode && <Spinner />}
         {!!message.images.length && (
