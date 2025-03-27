@@ -19,7 +19,7 @@
     "@tauri-apps/plugin-store": "~2.2.0",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.21",
-    "next": "15.1.6",
+    "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.3",
