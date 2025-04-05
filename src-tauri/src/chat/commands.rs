@@ -1,3 +1,5 @@
+use crate::error::{OllamateError, OllamateResult};
+
 use super::models::{AppState, ChatMessage, Model, ModelOptions};
 use base64::{self, Engine};
 use futures_util::StreamExt;
@@ -15,7 +17,7 @@ pub async fn fetch_chat_data(
     model_name: String,
     messages: Vec<ChatMessage>,
     options: ModelOptions,
-) -> Result<(), String> {
+) -> OllamateResult<()> {
     let mut state = app_state.lock().await;
     state.stop_flag = false;
     drop(state);
@@ -32,27 +34,28 @@ pub async fn fetch_chat_data(
             .to_string(),
         )
         .send()
-        .await
-        .map_err(|e| e.to_string())?;
+        .await?;
 
     if !response.status().is_success() {
-        return Err(format!("HTTP error! status: {}", response.status()));
+        return Err(OllamateError(format!(
+            "HTTP error! status: {}",
+            response.status()
+        )));
     }
 
     let mut stream = response.bytes_stream();
     let mut buffer = String::new();
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| e.to_string())?;
+        let chunk = chunk?;
         buffer.push_str(&String::from_utf8_lossy(&chunk));
         let buffer_clone = buffer.clone();
         let lines: Vec<&str> = buffer_clone.split('\n').collect();
         buffer = lines.last().unwrap_or(&"").to_string();
         for line in lines.iter().take(lines.len() - 1) {
             if !line.trim().is_empty() {
-                let data: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
-                app.emit("chat-response", data["message"].clone())
-                    .map_err(|e| e.to_string())?;
+                let data: Value = serde_json::from_str(line)?;
+                app.emit("chat-response", data["message"].clone())?;
             }
         }
         let state = app_state.lock().await;
@@ -71,8 +74,7 @@ pub async fn fetch_chat_data(
                     .to_string(),
                 )
                 .send()
-                .await
-                .map_err(|e| e.to_string());
+                .await;
             break;
         }
     }
@@ -81,31 +83,29 @@ pub async fn fetch_chat_data(
 }
 
 #[tauri::command]
-pub async fn pause_chat(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+pub async fn pause_chat(state: State<'_, Mutex<AppState>>) -> OllamateResult<()> {
     let mut state = state.lock().await;
     state.stop_flag = true;
-    drop(state); // 释放锁
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn fetch_model_list(api_url: String) -> Result<Vec<Model>, String> {
+pub async fn fetch_model_list(api_url: String) -> OllamateResult<Vec<Model>> {
     let client = Client::new();
-    let response = client
-        .get(format!("{}/api/tags", api_url))
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let response = client.get(format!("{}/api/tags", api_url)).send().await?;
 
     if !response.status().is_success() {
-        return Err(format!("HTTP error! status: {}", response.status()));
+        return Err(OllamateError(format!(
+            "HTTP error! status: {}",
+            response.status()
+        )));
     }
 
-    let data: Value = response.json().await.map_err(|e| e.to_string())?;
+    let data: Value = response.json().await?;
     let models = data["models"]
         .as_array()
-        .ok_or("Invalid response format")?
+        .ok_or(OllamateError("Invalid response format".into()))?
         .iter()
         .map(|model| Model {
             name: model["name"].as_str().unwrap_or_default().to_string(),
@@ -120,7 +120,7 @@ pub async fn fetch_model_list(api_url: String) -> Result<Vec<Model>, String> {
 }
 
 #[tauri::command]
-pub async fn open_images(app: AppHandle) -> Result<Vec<String>, String> {
+pub async fn open_images(app: AppHandle) -> OllamateResult<Vec<String>> {
     let image_paths = app
         .dialog()
         .file()
@@ -130,7 +130,7 @@ pub async fn open_images(app: AppHandle) -> Result<Vec<String>, String> {
 
     if let Some(paths) = image_paths {
         for path in paths {
-            let image_data = std::fs::read(path.to_string()).map_err(|e| e.to_string())?;
+            let image_data = std::fs::read(path.to_string())?;
             let base64_image = base64::engine::general_purpose::STANDARD.encode(&image_data);
             base64_images.push(base64_image);
         }
@@ -144,7 +144,7 @@ pub async fn generate_title(
     api_url: String,
     model_name: String,
     messages: Vec<ChatMessage>,
-) -> Result<String, String> {
+) -> OllamateResult<String> {
     let prompt = ChatMessage {
         role: "system".to_string(),
         content:
@@ -186,13 +186,12 @@ pub async fn generate_title(
             .to_string(),
         )
         .send()
-        .await
-        .map_err(|e| e.to_string())?;
-    let json_response: Value = response.json().await.map_err(|e| e.to_string())?;
+        .await?;
+    let json_response: Value = response.json().await?;
     let content = json_response["message"]["content"]
         .as_str()
         .unwrap_or_default();
-    let structured_content: Value = serde_json::from_str(&content).unwrap_or_default();
+    let structured_content: Value = serde_json::from_str(content).unwrap_or_default();
     let title = structured_content["title"]
         .as_str()
         .unwrap_or_default()
@@ -203,7 +202,7 @@ pub async fn generate_title(
         .to_string();
 
     if title.is_empty() || emoji.is_empty() {
-        return Err("Failed to generate title".to_string());
+        return Err(OllamateError("Failed to generate title".into()));
     }
 
     Ok(emoji + " " + &title)

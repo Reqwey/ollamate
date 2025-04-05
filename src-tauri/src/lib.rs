@@ -1,4 +1,6 @@
 mod chat;
+mod error;
+
 use chat::models::AppState;
 use tauri::{Builder, Manager};
 use tokio::sync::Mutex;

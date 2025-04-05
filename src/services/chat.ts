@@ -50,6 +50,7 @@ export const openImages = async () => {
     return images;
   } catch (error) {
     console.error(error);
+    return [];
   }
 };
 
@@ -67,5 +68,6 @@ export const generateTitle = async (
     return title;
   } catch (error) {
     console.error(error);
+    return "";
   }
 };

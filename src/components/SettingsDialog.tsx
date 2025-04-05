@@ -19,9 +19,14 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
-import { ColorWheelIcon, GlobeIcon, RocketIcon, StarFilledIcon } from "@radix-ui/react-icons";
+import {
+  ColorWheelIcon,
+  GlobeIcon,
+  RocketIcon,
+  StarFilledIcon,
+} from "@radix-ui/react-icons";
 import logoSrc from "@/assets/logo.png";
-import { getVersion } from '@tauri-apps/api/app';
+import { getVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
 
 function upperFirst(string: string) {
@@ -220,7 +225,7 @@ const SettingsDialog: React.FC = () => {
                           >
                             {appSettings.selectedModel &&
                               Object.entries(
-                                modelSettings[appSettings.selectedModel]
+                                modelSettings[appSettings.selectedModel] || {}
                               ).map(([key, value]) => (
                                 <DataList.Item key={key}>
                                   <DataList.Label>{key}</DataList.Label>
@@ -253,11 +258,14 @@ const SettingsDialog: React.FC = () => {
                   )}
                 </Tabs.Content>
 
-                <Tabs.Content
-                value="about"
-                >
+                <Tabs.Content value="about">
                   <Flex direction="column" gap="2" align="center">
-                    <img src={logoSrc.src} alt="Logo" width="100" height="100" />
+                    <img
+                      src={logoSrc.src}
+                      alt="Logo"
+                      width="100"
+                      height="100"
+                    />
                     <Text size="4" weight="bold">
                       OllaMate
                     </Text>
