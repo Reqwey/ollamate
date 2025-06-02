@@ -22,3 +22,13 @@ code {
 pre {
   max-width: 100%;
 }
+
+table {
+  border-collapse: collapse;
+  border: 1px solid var(--gray-6);
+}
+
+td, th {
+  border: 1px solid var(--gray-6);
+  padding: var(--card-padding);
+}

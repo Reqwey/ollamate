@@ -1,9 +1,9 @@
-
 import { Blockquote, Card, Flex, Code, Text, Link } from "@radix-ui/themes";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import { open } from "@tauri-apps/plugin-shell";
 
 interface MarkdownRendererProps {
@@ -12,7 +12,7 @@ interface MarkdownRendererProps {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkMath]}
+      remarkPlugins={[remarkMath, remarkGfm]}
       rehypePlugins={[rehypeKatex, rehypeHighlight]}
       components={{
         blockquote(props) {
