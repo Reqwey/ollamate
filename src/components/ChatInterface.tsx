@@ -323,7 +323,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       </Flex>
       <Box
         width="100%"
-        px="2"
+        pl="1"
+        pr="2"
         pb="2"
         style={{ zIndex: 1, background: "transparent" }}
       >

@@ -186,7 +186,7 @@ const Sidebar: React.FC = () => {
       width="250px"
       minWidth="250px"
       p="2"
-      pr="0"
+      pr="1"
       style={{ backgroundColor: "var(--gray-2)" }}
     >
       <Flex
@@ -207,11 +207,15 @@ const Sidebar: React.FC = () => {
           justify="center"
           px="4"
           pt="4"
+          gap="3"
           style={{ cursor: "pointer" }}
           onClick={() => router.push("/")}
         >
           <Text size="6" weight="light">
             OLLAMATE
+          </Text>
+          <Text size="6" weight="regular" color={appSettings?.accentColor}>
+            2.0
           </Text>
         </Flex>
         <ModelSelectDropdown
