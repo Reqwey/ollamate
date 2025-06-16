@@ -16,7 +16,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }, [getAppSettings]);
   return (
-    <Theme accentColor={accentColor}>
+    <Theme accentColor={accentColor} radius="large">
       <Flex direction="row" height="100vh" overflow="hidden">
         <Sidebar />
         <Flex height="100%" overflow="hidden" flexGrow="1">

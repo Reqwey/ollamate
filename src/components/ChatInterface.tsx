@@ -291,33 +291,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
       style={{ backgroundColor: "var(--gray-2)" }}
     >
       <Flex
-        mt="0"
-        direction="row"
-        align="center"
-        justify="between"
-        gap="3"
-        width="100%"
-        p="3"
-      >
-        <ModelSelectDropdown
-          modelName={modelName}
-          setModelName={setModelName}
-        />
-        <IconButton
-          size="3"
-          variant="ghost"
-          onClick={() => setSettingsDialogOpen(true)}
-        >
-          <GearIcon />
-        </IconButton>
-      </Flex>
-      <Flex
         gap="3"
         direction="column"
         flexGrow="1"
         overflowY="auto"
         width="100%"
-        style={{ borderTop: "1px solid var(--gray-6)" }}
       >
         {messages.map((message, index) => (
           <ChatMessageBubble
@@ -343,103 +321,112 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
         )}
         <Box ref={messageEndRef} />
       </Flex>
-      <Flex
-        gap="3"
-        mb="0"
-        direction="column"
+      <Box
         width="100%"
-        p="3"
-        style={{
-          backgroundColor: "var(--accent-1)",
-          boxShadow: "var(--shadow-4)",
-          borderRadius: "var(--radius-5) var(--radius-5) 0 0",
-        }}
+        px="2"
+        pb="2"
+        style={{ zIndex: 1, background: "transparent" }}
       >
-        {isTitleGenerating && (
-          <Callout.Root color="gray">
-            <Callout.Icon>
-              <Spinner />
-            </Callout.Icon>
-            <Callout.Text>Generating title...</Callout.Text>
-          </Callout.Root>
-        )}
+        <Flex
+          p="3"
+          gap="3"
+          direction="column"
+          height="100%"
+          width="100%"
+          style={{
+            backgroundColor: "var(--gray-3)",
+            boxShadow: "var(--shadow-2)",
+            border: "1px solid var(--gray-4)",
+            borderRadius: "var(--radius-5)",
+          }}
+        >
+          {isTitleGenerating && (
+            <Callout.Root color="gray">
+              <Callout.Icon>
+                <Spinner />
+              </Callout.Icon>
+              <Callout.Text>Generating title...</Callout.Text>
+            </Callout.Root>
+          )}
 
-        {!!images.length && (
-          <Grid columns={{ xs: "5", md: "8", lg: "9" }} gap="3" width="auto">
-            {images.map((image, index) => (
-              <AspectRatio key={index} ratio={1}>
-                <img
-                  src={`data:image/png;base64,${image}`}
-                  alt=""
-                  style={{
-                    objectFit: "cover",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "var(--radius-2)",
-                  }}
-                />
-              </AspectRatio>
-            ))}
-          </Grid>
-        )}
-        <Flex direction="row" gap="3" justify="between" align="center">
-          <Tooltip content="Upload images">
-            <IconButton
-              radius="full"
-              variant="soft"
-              loading={isMessageGenerating || isTitleGenerating}
-              onClick={() =>
-                openImages().then((list) => list && setImages(list))
+          {!!images.length && (
+            <Grid columns={{ xs: "5", md: "8", lg: "9" }} gap="3" width="auto">
+              {images.map((image, index) => (
+                <AspectRatio key={index} ratio={1}>
+                  <img
+                    src={`data:image/png;base64,${image}`}
+                    alt=""
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "var(--radius-2)",
+                    }}
+                  />
+                </AspectRatio>
+              ))}
+            </Grid>
+          )}
+          <Flex direction="row" gap="3" justify="between" align="center">
+            <Tooltip content="Upload images">
+              <IconButton
+                radius="full"
+                variant="classic"
+                loading={isMessageGenerating || isTitleGenerating}
+                onClick={() =>
+                  openImages().then((list) => list && setImages(list))
+                }
+              >
+                <UploadIcon />
+              </IconButton>
+            </Tooltip>
+            <TextArea
+              value={input}
+              disabled={isMessageGenerating || isTitleGenerating}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              radius="large"
+              style={{ flex: 1, backgroundColor: "var(--gray-3)" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.ctrlKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
+            <Tooltip
+              content={
+                isMessageGenerating ? "Generating message..." : "Send message"
               }
             >
-              <UploadIcon />
-            </IconButton>
-          </Tooltip>
-          <TextArea
-            value={input}
-            disabled={isMessageGenerating || isTitleGenerating}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            radius="large"
-            style={{ flex: 1 }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.ctrlKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-          />
-          <Tooltip
-            content={
-              isMessageGenerating ? "Generating message..." : "Send message"
-            }
-          >
-            <IconButton
-              disabled={input.length === 0 && !isMessageGenerating}
-              radius="full"
-              onClick={isMessageGenerating ? pauseChat : handleSend}
-            >
-              {isMessageGenerating ? <PauseIcon /> : <PaperPlaneIcon />}
-            </IconButton>
-          </Tooltip>
-        </Flex>
+              <IconButton
+                disabled={input.length === 0 && !isMessageGenerating}
+                radius="full"
+                onClick={isMessageGenerating ? pauseChat : handleSend}
+                variant="classic"
+              >
+                {isMessageGenerating ? <PauseIcon /> : <PaperPlaneIcon />}
+              </IconButton>
+            </Tooltip>
+          </Flex>
 
-        <Flex justify="between">
-          <Text color="gray" size="1">
-            Conversations are only saved locally.
-          </Text>
-          <Flex gap="1" align="center">
-            <Kbd size="1">Enter</Kbd>
+          <Flex justify="between">
             <Text color="gray" size="1">
-              to add a line break.
+              Conversations are only saved locally.
             </Text>
-            <Kbd size="1">Ctrl+Enter</Kbd>
-            <Text color="gray" size="1">
-              to send.
-            </Text>
+            <Flex gap="1" align="center">
+              <Kbd size="1">Enter</Kbd>
+              <Text color="gray" size="1">
+                to add a line break.
+              </Text>
+              <Kbd size="1">Ctrl+Enter</Kbd>
+              <Text color="gray" size="1">
+                to send.
+              </Text>
+            </Flex>
           </Flex>
         </Flex>
-      </Flex>
+      </Box>
     </Flex>
   );
 };

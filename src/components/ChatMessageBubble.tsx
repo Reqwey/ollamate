@@ -74,10 +74,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           : message.role}
       </Text>
       <Card
+        variant="classic"
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "var(--space-1)",
+          gap: "var(--space-2)",
+          backgroundColor:
+            message.role === "user" ? "var(--accent-a5)" : "var(--accent-a3)",
           maxWidth: "100%",
         }}
       >
@@ -85,7 +88,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           <>
             <Card
               style={{
-                backgroundColor: "var(--accent-a5)",
+                backgroundColor: "var(--accent-a7)",
                 width: "min(max-content, 100%)",
               }}
             >
@@ -136,7 +139,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           </Flex>
         )}
         <Inset side="bottom">
-          <Separator size="4" />
           <Flex gap="3" direction="row" p="2">
             {alternatives.length >= 2 && selfPosition !== -1 && (
               <Flex gap="2" direction="row">

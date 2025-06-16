@@ -1,10 +1,10 @@
-import TitleBar from "@/components/ModelSelectDropdown";
 import { useChatContext } from "@/contexts/chat";
 import { useSettingsContext } from "@/contexts/settings";
-import { ChatBubbleIcon, RocketIcon } from "@radix-ui/react-icons";
-import { Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { Button, Flex, Text } from "@radix-ui/themes";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import logo from "@/assets/logo.png";
+import { ChatBubbleIcon } from "@radix-ui/react-icons";
 
 export default function HomePage() {
   const { createChat } = useChatContext();
@@ -26,17 +26,24 @@ export default function HomePage() {
         align="center"
         justify="center"
         direction="column"
+        gap="4"
       >
-        <Text size="6" weight="bold">
-          Welcome to OllaMate
-        </Text>
-        <Text size="3" weight="medium">
+        <img
+          src={logo.src}
+          alt="OllaMate Logo"
+          width="100"
+          height="100"
+          style={{ borderRadius: "50%", marginBottom: "20px", boxShadow: "var(--shadow-6)" }}
+        />
+        <Text size="3" weight="light" color="gray">
           Yet another Ollama chat interface.
         </Text>
         <Flex gap="2" mt="4">
-          <TitleBar modelName={modelName} setModelName={setModelName} />
           <Button
             variant="classic"
+            radius="full"
+            size="4"
+            style={{ width: "250px" }}
             onClick={() => {
               createChat().then((chat) => {
                 if (chat) {
@@ -45,8 +52,8 @@ export default function HomePage() {
               });
             }}
           >
+            <ChatBubbleIcon />
             Start Chatting
-            <RocketIcon />
           </Button>
         </Flex>
       </Flex>

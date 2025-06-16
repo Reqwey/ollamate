@@ -16,7 +16,6 @@ import {
   TextField,
 } from "@radix-ui/themes";
 import {
-  ChatBubbleIcon,
   GearIcon,
   HamburgerMenuIcon,
   Pencil2Icon,
@@ -28,6 +27,8 @@ import { ChatInfo } from "@/models/chat";
 import { UUID } from "crypto";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
+import { AppSettings } from "@/models/settings";
+import ModelSelectDropdown from "@/components/ModelSelectDropdown";
 
 interface NavMenuProps {
   id: UUID;
@@ -66,7 +67,9 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
       className={id === currentId ? "selected" : ""}
       style={{
         width: "100%",
+        minHeight: "max-content",
         cursor: "pointer",
+        boxShadow: id === currentId ? "var(--shadow-3)" : "none",
       }}
       onClick={() => router.push(`/chat/${id}`)}
       variant="classic"
@@ -84,14 +87,11 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
         </TextField.Root>
       ) : (
         <Flex gap="3" align="center" justify="between">
-          <Flex gap="3" align="center" justify="between">
-            <ChatBubbleIcon color="gray" />
-            <Flex direction="column">
-              <Text size="3">{title || "Untitled chat"}</Text>
-              <Text size="1" color="gray">
-                {updatedAt.toLocaleString()}
-              </Text>
-            </Flex>
+          <Flex direction="column">
+            <Text size="3">{title || "Untitled chat"}</Text>
+            <Text size="1" color="gray">
+              {updatedAt.toLocaleString()}
+            </Text>
           </Flex>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
@@ -119,10 +119,12 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
 const Sidebar: React.FC = () => {
   const { getChatInfoList, createChat, updateChat, deleteChat } =
     useChatContext();
+  const [modelName, setModelName] = useState<string>();
+  const [appSettings, setAppSettings] = useState<AppSettings>();
   const [chatInfoList, setChatInfoList] = useState<ChatInfo[]>([]);
   const [navMenuList, setNavMenuList] = useState<NavMenuProps[]>([]);
   const router = useRouter();
-  const { setSettingsDialogOpen } = useSettingsContext();
+  const { setSettingsDialogOpen, getAppSettings } = useSettingsContext();
 
   const handleCreateMenu = useCallback(async () => {
     const newChat = await createChat();
@@ -140,6 +142,14 @@ const Sidebar: React.FC = () => {
       router.push(`/chat/${newChat.id}`);
     }
   }, [createChat, deleteChat, navMenuList, router, updateChat]);
+
+  useEffect(() => {
+    getAppSettings().then(setAppSettings);
+  }, [getAppSettings]);
+
+  useEffect(() => {
+    if (appSettings) setModelName(appSettings.selectedModel);
+  }, [appSettings]);
 
   useEffect(() => {
     const fetchChatInfoList = async () => {
@@ -171,50 +181,59 @@ const Sidebar: React.FC = () => {
   }, [navMenuList]);
 
   return (
-    <Flex
-      height="100%"
-      direction="column"
-      width="250px"
-      minWidth="250px"
-      p="4"
-      overflowY="auto"
-      style={{ borderRight: "1px solid var(--gray-6)" }}
-    >
+    <Box height="100%" width="250px" minWidth="250px" p="2">
       <Flex
+        height="100%"
         width="100%"
-        align="center"
-        justify="center"
-        p="4"
-        style={{ cursor: "pointer" }}
-        onClick={() => router.push("/")}
+        direction="column"
+        style={{
+          borderRadius: "var(--radius-5)",
+          backgroundColor: "var(--gray-3)",
+          border: "1px solid var(--gray-4)",
+          boxShadow: "var(--shadow-2)",
+        }}
+        gap="2"
       >
-        <Text size="6" weight="bold">
-          OllaMate
-        </Text>
-      </Flex>
-
-      <Flex flexGrow="1" direction="column" width="100%" gap="3">
-        <Button
-          variant="soft"
-          style={{ width: "100%" }}
-          onClick={handleCreateMenu}
+        <Flex
+          width="100%"
+          align="center"
+          justify="center"
+          px="4"
+          pt="4"
+          style={{ cursor: "pointer" }}
+          onClick={() => router.push("/")}
         >
-          <PlusCircledIcon />
-          New Chat
-        </Button>
-        {renderNavMenuList}
+          <Text size="6" weight="light">
+            OLLAMATE
+          </Text>
+        </Flex>
+        <ModelSelectDropdown
+          modelName={modelName}
+          setModelName={setModelName}
+        />
+        <Flex overflowY="auto" direction="column" gap="2" p="2">
+          {renderNavMenuList}
+        </Flex>
+        <Flex gap="2" direction="row" align="center" px="2" pb="2">
+          <Button
+            variant="classic"
+            onClick={handleCreateMenu}
+            style={{ flexGrow: 1 }}
+            radius="full"
+          >
+            <PlusCircledIcon />
+            New Chat
+          </Button>
+          <IconButton
+            variant="classic"
+            radius="full"
+            onClick={() => setSettingsDialogOpen(true)}
+          >
+            <GearIcon />
+          </IconButton>
+        </Flex>
       </Flex>
-      <Box width="100%" mt="auto" p="3">
-        <Button
-          variant="ghost"
-          style={{ width: "100%" }}
-          onClick={() => setSettingsDialogOpen(true)}
-        >
-          <GearIcon />
-          Settings
-        </Button>
-      </Box>
-    </Flex>
+    </Box>
   );
 };
 
