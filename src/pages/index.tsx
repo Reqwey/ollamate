@@ -19,7 +19,12 @@ export default function HomePage() {
   }, [getAppSettings]);
 
   return (
-    <Flex direction="column" height="100%" width="100%">
+    <Flex
+      direction="column"
+      height="100%"
+      width="100%"
+      style={{ backgroundColor: "var(--gray-2)" }}
+    >
       <Flex
         width="100%"
         height="100%"
@@ -33,7 +38,11 @@ export default function HomePage() {
           alt="OllaMate Logo"
           width="100"
           height="100"
-          style={{ borderRadius: "50%", marginBottom: "20px", boxShadow: "var(--shadow-6)" }}
+          style={{
+            borderRadius: "50%",
+            marginBottom: "20px",
+            boxShadow: "var(--shadow-6)",
+          }}
         />
         <Text size="3" weight="light" color="gray">
           Yet another Ollama chat interface.

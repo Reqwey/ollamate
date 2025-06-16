@@ -181,7 +181,14 @@ const Sidebar: React.FC = () => {
   }, [navMenuList]);
 
   return (
-    <Box height="100%" width="250px" minWidth="250px" p="2">
+    <Box
+      height="100%"
+      width="250px"
+      minWidth="250px"
+      p="2"
+      pr="0"
+      style={{ backgroundColor: "var(--gray-2)" }}
+    >
       <Flex
         height="100%"
         width="100%"
