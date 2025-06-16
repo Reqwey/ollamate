@@ -223,20 +223,24 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
       const chat = await store.get<StoredChat>(chatId);
       if (!chat) return;
 
-      const updatedMessages = chat.messages
-        .filter((message) => message.id !== messageId)
-        .map((message) => {
-          if (message.nextIds.includes(messageId)) {
-            return {
-              ...message,
-              nextIds: message.nextIds.filter((id) => id !== messageId),
-            };
-          } else {
-            return message;
-          }
-        });
+      const deleteLeafMessages = (
+        messageId: UUID,
+        chatMessages: ChatMessage[]
+      ) => {
+        let root = chatMessages.find((message) => message.id === messageId);
+        if (!root) return chatMessages;
+        chatMessages = chatMessages.filter(
+          (message) => message.id !== messageId
+        );
+        for (const nextId of root.nextIds) {
+          chatMessages = deleteLeafMessages(nextId, chatMessages);
+        }
+        return chatMessages;
+      };
 
-      await updateChat(chatId, { messages: updatedMessages });
+      await updateChat(chatId, {
+        messages: deleteLeafMessages(messageId, chat.messages),
+      });
     },
     [fetchStore, updateChat]
   );
