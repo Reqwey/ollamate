@@ -227,7 +227,7 @@ export const ChatContextProvider: React.FC<{ children: React.ReactNode }> = ({
         messageId: UUID,
         chatMessages: ChatMessage[]
       ) => {
-        let root = chatMessages.find((message) => message.id === messageId);
+        const root = chatMessages.find((message) => message.id === messageId);
         if (!root) return chatMessages;
         chatMessages = chatMessages.filter(
           (message) => message.id !== messageId
