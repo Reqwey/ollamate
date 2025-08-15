@@ -4,7 +4,7 @@ import { Button, Flex, Text } from "@radix-ui/themes";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
-import { ChatBubbleIcon } from "@radix-ui/react-icons";
+import { AiOutlineMessage } from "react-icons/ai";
 
 export default function HomePage() {
   const { createChat } = useChatContext();
@@ -49,7 +49,7 @@ export default function HomePage() {
         </Text>
         <Flex gap="2" mt="4">
           <Button
-            variant="classic"
+            variant="soft"
             radius="full"
             size="4"
             style={{ width: "250px" }}
@@ -61,7 +61,7 @@ export default function HomePage() {
               });
             }}
           >
-            <ChatBubbleIcon />
+            <AiOutlineMessage />
             Start Chatting
           </Button>
         </Flex>

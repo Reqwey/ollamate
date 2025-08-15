@@ -16,19 +16,16 @@ import {
   TextField,
 } from "@radix-ui/themes";
 import {
-  GearIcon,
-  HamburgerMenuIcon,
-  Pencil2Icon,
-  PlusCircledIcon,
-  TrashIcon,
-} from "@radix-ui/react-icons";
+  AiOutlineMenu,
+  AiOutlineEdit,
+  AiOutlineDelete,
+} from "react-icons/ai";
 import { useChatContext } from "@/contexts/chat";
 import { ChatInfo } from "@/models/chat";
 import { UUID } from "crypto";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
 import { AppSettings } from "@/models/settings";
-import ModelSelectDropdown from "@/components/ModelSelectDropdown";
 
 interface NavMenuProps {
   id: UUID;
@@ -82,7 +79,7 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
           onChange={(e) => setNewTitle(e.target.value)}
         >
           <TextField.Slot>
-            <Pencil2Icon />
+            <AiOutlineEdit />
           </TextField.Slot>
         </TextField.Root>
       ) : (
@@ -96,16 +93,16 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
               <IconButton variant="ghost">
-                <HamburgerMenuIcon />
+                <AiOutlineMenu />
               </IconButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
               <DropdownMenu.Item onClick={() => setEditMode(true)}>
-                <Pencil2Icon />
+                <AiOutlineEdit />
                 Edit
               </DropdownMenu.Item>
               <DropdownMenu.Item color="red" onClick={onDelete}>
-                <TrashIcon />
+                <AiOutlineDelete />
                 Delete
               </DropdownMenu.Item>
             </DropdownMenu.Content>
@@ -117,39 +114,10 @@ const NavMenu: React.FC<{ value: NavMenuProps }> = ({ value }) => {
 };
 
 const Sidebar: React.FC = () => {
-  const { getChatInfoList, createChat, updateChat, deleteChat } =
+  const { getChatInfoList, updateChat, deleteChat } =
     useChatContext();
-  const [modelName, setModelName] = useState<string>();
-  const [appSettings, setAppSettings] = useState<AppSettings>();
   const [chatInfoList, setChatInfoList] = useState<ChatInfo[]>([]);
   const [navMenuList, setNavMenuList] = useState<NavMenuProps[]>([]);
-  const router = useRouter();
-  const { setSettingsDialogOpen, getAppSettings } = useSettingsContext();
-
-  const handleCreateMenu = useCallback(async () => {
-    const newChat = await createChat();
-    if (newChat) {
-      setNavMenuList([
-        ...navMenuList,
-        {
-          id: newChat.id,
-          title: newChat.title,
-          setTitle: (title: string) => updateChat(newChat.id, { title }),
-          onDelete: () => deleteChat(newChat.id),
-          updatedAt: newChat.updatedAt,
-        },
-      ]);
-      router.push(`/chat/${newChat.id}`);
-    }
-  }, [createChat, deleteChat, navMenuList, router, updateChat]);
-
-  useEffect(() => {
-    getAppSettings().then(setAppSettings);
-  }, [getAppSettings]);
-
-  useEffect(() => {
-    if (appSettings) setModelName(appSettings.selectedModel);
-  }, [appSettings]);
 
   useEffect(() => {
     const fetchChatInfoList = async () => {
@@ -200,49 +168,10 @@ const Sidebar: React.FC = () => {
           boxShadow: "var(--shadow-2)",
         }}
         gap="2"
+        overflowY="auto"
+        p="2"
       >
-        <Flex
-          width="100%"
-          align="center"
-          justify="center"
-          px="4"
-          pt="4"
-          gap="3"
-          style={{ cursor: "pointer" }}
-          onClick={() => router.push("/")}
-        >
-          <Text size="6" weight="light">
-            OLLAMATE
-          </Text>
-          <Text size="6" weight="regular" color={appSettings?.accentColor}>
-            2.0
-          </Text>
-        </Flex>
-        <ModelSelectDropdown
-          modelName={modelName}
-          setModelName={setModelName}
-        />
-        <Flex overflowY="auto" direction="column" gap="2" p="2">
-          {renderNavMenuList}
-        </Flex>
-        <Flex gap="2" direction="row" align="center" px="2" pb="2">
-          <Button
-            variant="classic"
-            onClick={handleCreateMenu}
-            style={{ flexGrow: 1 }}
-            radius="full"
-          >
-            <PlusCircledIcon />
-            New Chat
-          </Button>
-          <IconButton
-            variant="classic"
-            radius="full"
-            onClick={() => setSettingsDialogOpen(true)}
-          >
-            <GearIcon />
-          </IconButton>
-        </Flex>
+        {renderNavMenuList}
       </Flex>
     </Box>
   );

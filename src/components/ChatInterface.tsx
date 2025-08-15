@@ -23,14 +23,13 @@ import {
   generateTitle,
 } from "@/services/chat";
 import {
-  GearIcon,
-  PaperPlaneIcon,
-  PauseIcon,
-  UploadIcon,
-} from "@radix-ui/react-icons";
+  AiOutlineSetting,
+  AiOutlineSend,
+  AiOutlinePause,
+  AiOutlineUpload,
+} from "react-icons/ai";
 import { useRouter } from "next/router";
 import { useSettingsContext } from "@/contexts/settings";
-import ModelSelectDropdown from "@/components/ModelSelectDropdown";
 import { AppSettings, ModelSettings } from "@/models/settings";
 import ChatMessageBubble from "@/components/ChatMessageBubble";
 
@@ -372,13 +371,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
             <Tooltip content="Upload images">
               <IconButton
                 radius="full"
-                variant="classic"
+                variant="soft"
                 loading={isMessageGenerating || isTitleGenerating}
                 onClick={() =>
                   openImages().then((list) => list && setImages(list))
                 }
               >
-                <UploadIcon />
+                <AiOutlineUpload />
               </IconButton>
             </Tooltip>
             <TextArea
@@ -404,9 +403,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
                 disabled={input.length === 0 && !isMessageGenerating}
                 radius="full"
                 onClick={isMessageGenerating ? pauseChat : handleSend}
-                variant="classic"
+                variant="soft"
               >
-                {isMessageGenerating ? <PauseIcon /> : <PaperPlaneIcon />}
+                {isMessageGenerating ? <AiOutlinePause /> : <AiOutlineSend />}
               </IconButton>
             </Tooltip>
           </Flex>

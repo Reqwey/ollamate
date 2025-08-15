@@ -28,7 +28,7 @@ const ModelSelectDropdown: React.FC<ModelSelectDropdownProps> = ({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Button variant="outline" radius="full" m="2" mb="0">
+        <Button variant="outline" radius="full">
           {modelName || "Select a model"}
           <DropdownMenu.TriggerIcon />
         </Button>

@@ -20,11 +20,11 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import {
-  ColorWheelIcon,
-  GlobeIcon,
-  RocketIcon,
-  StarFilledIcon,
-} from "@radix-ui/react-icons";
+  AiOutlineBgColors,
+  AiOutlineGlobal,
+  AiOutlineRocket,
+  AiOutlineStar,
+} from "react-icons/ai";
 import logoSrc from "@/assets/logo.png";
 import { getVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
@@ -84,7 +84,7 @@ const SettingsDialog: React.FC = () => {
                     <Flex direction="column" gap="3" p="4">
                       <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
-                          <RocketIcon />
+                          <AiOutlineRocket />
                           Auto generate title:
                           <Switch
                             size="2"
@@ -104,7 +104,7 @@ const SettingsDialog: React.FC = () => {
 
                       <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
-                          <GlobeIcon />
+                          <AiOutlineGlobal />
                           Ollama API URL:
                           <TextField.Root
                             size="2"
@@ -124,7 +124,7 @@ const SettingsDialog: React.FC = () => {
 
                       <Text weight="light" as="label" size="2">
                         <Flex gap="2" align="center">
-                          <ColorWheelIcon />
+                          <AiOutlineBgColors />
                           Accent color:
                         </Flex>
                         <Grid mt="1" columns="13" gap="2" role="group">
@@ -279,7 +279,7 @@ const SettingsDialog: React.FC = () => {
                         open("https://github.com/Reqwey/ollamate");
                       }}
                     >
-                      <StarFilledIcon />
+                      <AiOutlineStar />
                       Star
                     </Button>
                   </Flex>

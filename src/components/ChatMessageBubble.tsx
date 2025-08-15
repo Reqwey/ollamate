@@ -6,20 +6,19 @@ import {
   Spinner,
   Text,
   Inset,
-  Separator,
   IconButton,
   Tooltip,
 } from "@radix-ui/themes";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import {
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CopyIcon,
-  TrashIcon,
-  UpdateIcon,
-} from "@radix-ui/react-icons";
-import { useCallback, useState } from "react";
+  AiOutlineCheck,
+  AiOutlineLeft,
+  AiOutlineRight,
+  AiOutlineCopy,
+  AiOutlineDelete,
+  AiOutlineReload,
+} from "react-icons/ai";
+import { useState } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { UUID } from "crypto";
 
@@ -156,7 +155,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                       }
                     }}
                   >
-                    <ChevronLeftIcon />
+                    <AiOutlineLeft />
                   </IconButton>
                 )}
                 <Text size="1" color="gray">
@@ -176,7 +175,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                       }
                     }}
                   >
-                    <ChevronRightIcon />
+                    <AiOutlineRight />
                   </IconButton>
                 )}
               </Flex>
@@ -188,7 +187,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 variant="ghost"
                 onClick={handleCopy}
               >
-                {copied ? <CheckIcon /> : <CopyIcon />}
+                {copied ? <AiOutlineCheck /> : <AiOutlineCopy />}
               </IconButton>
             </Tooltip>
             {message.role === "assistant" && !!onReGenerate && (
@@ -198,7 +197,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                   variant="ghost"
                   onClick={() => onReGenerate(message)}
                 >
-                  <UpdateIcon />
+                  <AiOutlineReload />
                 </IconButton>
               </Tooltip>
             )}
@@ -210,7 +209,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                   color="red"
                   onClick={() => onDelete(message.id)}
                 >
-                  <TrashIcon />
+                  <AiOutlineDelete />
                 </IconButton>
               </Tooltip>
             )}
