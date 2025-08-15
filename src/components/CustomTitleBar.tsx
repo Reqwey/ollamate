@@ -36,21 +36,25 @@ function CustomTitleBar() {
 
   useEffect(() => {
     setAppWindow(getCurrentWindow());
-  }, [getCurrentWindow]);
+  }, []);
 
   useEffect(() => {
     getAppSettings().then(setAppSettings);
   }, [getAppSettings]);
+
   useEffect(() => {
     if (appSettings) setModelName(appSettings.selectedModel);
   }, [appSettings]);
+
   useEffect(() => {
     if (titleBarRef.current && appWindow) {
       titleBarRef.current.addEventListener("mousedown", (e) => {
         if (e.button === 0) {
-          e.detail === 2
-            ? appWindow.toggleMaximize() // Maximize on double click
-            : appWindow.startDragging();
+          if (e.detail === 2) {
+            appWindow.toggleMaximize(); // Maximize on double click
+          } else {
+            appWindow.startDragging();
+          }
         }
       });
     }
@@ -137,7 +141,9 @@ function CustomTitleBar() {
           variant="ghost"
           onClick={(e) => {
             e.preventDefault();
-            appWindow && appWindow.minimize();
+            if (appWindow) {
+              appWindow.minimize();
+            }
           }}
         >
           <AiOutlineMinus />
@@ -147,7 +153,9 @@ function CustomTitleBar() {
           variant="ghost"
           onClick={(e) => {
             e.preventDefault();
-            appWindow && appWindow.toggleMaximize();
+            if (appWindow) {
+              appWindow.toggleMaximize();
+            }
           }}
         >
           {isMaximized ? <AiOutlineShrink /> : <AiOutlineExpandAlt />}
@@ -158,7 +166,9 @@ function CustomTitleBar() {
           color="red"
           onClick={(e) => {
             e.preventDefault();
-            appWindow && appWindow.close();
+            if (appWindow) {
+              appWindow.close();
+            }
           }}
         >
           <AiOutlineClose />
